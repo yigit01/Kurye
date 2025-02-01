@@ -11,6 +11,13 @@ import { User, UserRole } from '../user/entities/user.entity';
 import { CreateShipmentDto } from './dto/create-shipment.dto';
 import { generateTrackingCode } from '../utils/tracking-code.generator';
 import { UpdateShipmentDto } from './dto/update-shipment.dto';
+import { TransferShipmentDto } from './dto/transfer-shipment.dto';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
+import { Branch } from '../branch/entities/branch.entity';
 
 @Injectable()
 export class ShipmentService {
@@ -21,6 +28,8 @@ export class ShipmentService {
     private shipmentHistoryRepository: Repository<ShipmentHistory>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Branch)
+    private branchRepository: Repository<Branch>,
   ) {}
 
   async create(
@@ -53,7 +62,11 @@ export class ShipmentService {
     return savedShipment;
   }
 
-  async findAll(userId: string, role: UserRole): Promise<Shipment[]> {
+  async findAll(
+    userId: string,
+    role: UserRole,
+    options: IPaginationOptions,
+  ): Promise<Pagination<Shipment>> {
     const query = this.shipmentRepository
       .createQueryBuilder('shipment')
       .leftJoinAndSelect('shipment.sender', 'sender')
@@ -66,7 +79,7 @@ export class ShipmentService {
       query.where('assignedCourier.id = :userId', { userId });
     }
 
-    return query.getMany();
+    return paginate<Shipment>(query, options);
   }
 
   async findOne(id: string): Promise<Shipment> {
@@ -165,6 +178,50 @@ export class ShipmentService {
       ShipmentStatus.COURIER_ASSIGNED,
       user,
       `Assigned to courier: ${courier.fullName}`,
+    );
+
+    return updatedShipment;
+  }
+
+  async transferToBranch(
+    id: string,
+    transferShipmentDto: TransferShipmentDto,
+    userId: string,
+  ): Promise<Shipment> {
+    const shipment = await this.findOne(id);
+    const targetBranch = await this.branchRepository.findOne({
+      where: { id: transferShipmentDto.targetBranchId },
+    });
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!targetBranch) {
+      throw new NotFoundException('Target branch not found');
+    }
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if shipment is already in the target branch
+    if (shipment.currentBranch?.id === targetBranch.id) {
+      throw new BadRequestException('Shipment is already in this branch');
+    }
+
+    // Update shipment
+    shipment.currentBranch = targetBranch;
+    shipment.status = ShipmentStatus.IN_TRANSIT;
+    const updatedShipment = await this.shipmentRepository.save(shipment);
+
+    // Create history record
+    await this.createShipmentHistory(
+      updatedShipment,
+      ShipmentStatus.IN_TRANSIT,
+      user,
+      `Transferred to branch: ${targetBranch.name}${
+        transferShipmentDto.transferNote
+          ? ` - ${transferShipmentDto.transferNote}`
+          : ''
+      }`,
     );
 
     return updatedShipment;

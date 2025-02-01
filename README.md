@@ -1,195 +1,463 @@
-Aşağıdaki doküman, belirttiğiniz teknoloji yığını (Tech Stack) — **NestJS**, **TypeORM**, **PostgreSQL** ve **React TypeScript** — kullanılarak geliştirilecek bir **Kargo Takip Uygulaması** için örnek bir **Ürün Gereksinimleri Dokümanı (Product Requirements Document – PRD)** taslağıdır. Bu doküman; uygulamanın amaçlarını, kapsamını, temel gereksinimlerini ve nasıl geliştirileceğini yüksek seviyede tanımlar. Geliştirme sürecinde bu taslağı ihtiyaçlarınıza göre daha detaylandırabilirsiniz.
+# Kargo Takip Sistemi
 
----
+Bu proje, NestJS, TypeORM, PostgreSQL kullanılarak geliştirilmiş modern bir kargo takip sistemidir.
 
-# 1. Genel Bakış
+## Backend Teknoloji Yığını
+
+- **Framework**: NestJS v11.0 (TypeScript)
+- **Veritabanı**: PostgreSQL
+- **ORM**: TypeORM
+- **Authentication**: JWT (JSON Web Token)
+- **Validation**: class-validator
+- **Pagination**: nestjs-typeorm-paginate
+- **API Documentation**: Swagger/OpenAPI (planlanan)
+- **Testing**: Jest (planlanan)
+
+## Backend Modüler Yapı
+
+1. **Auth Module** (`/src/auth`)
+
+   - JWT tabanlı kimlik doğrulama
+   - Role-based access control (RBAC)
+   - Guards: `JwtAuthGuard`, `RolesGuard`
+   - Decorators: `@Roles()`, `@GetUser()`
 
-## 1.1. Ürünün Amacı
-
-- **Kargo Takip ve Yönetim Sistemi**: Gönderici ve alıcının kargo durumunu uçtan uca izleyebildiği, kurye ve şube operasyonlarının yönetilebildiği bir platform.
-- **Temel Hedef**:
-  - Kargonun oluşturulmasından, şubeler/dağıtım merkezleri arası transferine, en sonunda alıcıya teslim edilmesine kadar tüm sürecin **gerçek zamanlı** takibi.
-  - Manuel kurye ataması, barkod/QR okutma, faturalandırma, T.C./Vergi numarası kaydı gibi kritik işlevlerin sorunsuz yönetimi.
-
-## 1.2. Kullanıcı Rolleri
-
-1. **Gönderici**: Kargoyu oluşturan, gönderim talebini başlatan kişi veya şirket.
-2. **Alıcı**: Kargoyu teslim alacak son kullanıcı.
-3. **Kurye**: Kargoyu teslim alan ve dağıtımını gerçekleştiren saha personeli.
-4. **Şube/Operasyon Sorumlusu**: Kargoları ayrıştıran, transfer planlaması yapan ve kurye atamalarını yöneten kişi.
-5. **Yönetici/Admin**: Tüm sistemi izleyebilen, raporlama yapabilen, kullanıcı/şube/kurye yönetiminden sorumlu.
-
----
-
-# 2. Kapsam
-
-## 2.1. Önemli Özellikler
-
-1. **Kargo Oluşturma ve Takip Numarası Üretimi**
-
-   - Göndericinin ad, soyad, telefon, T.C./Vergi no (fatura için), ödeme tipi gibi bilgilerin girilmesi.
-   - Benzersiz bir barkod/QR kod üretilerek kargo kimliğinin sistemde tanımlanması.
-
-2. **Manuel Kurye Ataması**
-
-   - Şube sorumlusu, bekleyen kargolar için sistem üzerinden kurye seçer.
-   - Kurye, mobil veya web arayüzünden kendisine atanan kargoları görüntüler.
-
-3. **Barkod Okuma**
-
-   - Kurye, kargoyu teslim alırken veya teslim ederken barkodu (kamera ile) okutarak sistemde durum güncellemesi yapar.
-
-4. **Kargo Durum Takibi**
-
-   - “Kargo Oluşturuldu” → “Kurye Teslim Aldı” → “Şubede” → “Transfer Ediliyor” → “Dağıtıma Çıktı” → “Teslim Edildi” gibi aşamalar.
-   - Alıcı ve gönderici bu durumları anlık izleyebilir.
-
-5. **Faturalandırma ve Ödeme**
-
-   - Ödeme tipinin (POS, Nakit, IBAN vb.) kaydı, faturalandırma için T.C./Vergi no doğrulaması.
-   - Muhasebe/finans sistemine temel entegrasyon (opsiyonel).
-
-6. **Şubeler Arası Transfer ve Ayrıştırma**
-
-   - Kargonun farklı şubeler veya dağıtım merkezleri arasında taşınması, durum güncellemeleri.
-
-7. **Raporlama ve Yönetici Paneli**
-   - Toplam kargo sayısı, teslim edilmeyi bekleyen kargolar, gecikmeler, şube performansları vb.
-   - Kullanıcı yönetimi, rol tanımları, yetkilendirmeler.
-
----
-
-# 3. İşlevsel Gereksinimler (Functional Requirements)
-
-Aşağıdaki gereksinimler, öne çıkan işlevleri detaylandırmaktadır.
-
-| Kim?                     | Gereksinim                                                                                                                                                                                                                                                                                       |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Gönderici                | 1. Kargo oluştururken **Ad, Soyad, Telefon, TC/Vergi No, Adres** gibi bilgileri girebilir.<br>2. Ödeme yöntemini (POS, Nakit, IBAN, Borç vb.) seçebilir.<br>3. Kargo takip numarası veya barkodu çıktı olarak alabilir.                                                                          |
-| Kurye                    | 1. **Barkod okutarak** kargoyu teslim aldığını sisteme işleyebilir.<br>2. Kendisine **manuel atanan** kargoların listesini görebilir.<br>3. Dağıtıma çıktığında veya alıcıya teslim ettiğinde durumu güncelleyebilir.                                                                            |
-| Şube/Operasyon Sorumlusu | 1. Yeni oluşturulan kargoları listeleyebilir.<br>2. **Manuel olarak kurye ataması** yapabilir.<br>3. Şubeye gelen kargoların durumunu **“Şubeye Ulaştı”** olarak güncelleyebilir.<br>4. Kargoları farklı şubeye veya dağıtım merkezine sevk etmek için “Transfer Ediliyor” durumuna geçirebilir. |
-| Alıcı                    | 1. Web veya mobil arayüzde **kargo takip numarası** girerek kargonun anlık durumunu görebilir.<br>2. Teslim aşamasında kuryenin barkod okumasıyla teslim onayını verebilir (isteğe bağlı dijital imza).                                                                                          |
-| Yönetici/Admin           | 1. Kullanıcıları, kuryeleri, şubeleri, rolleri yönetebilir.<br>2. Kargo hareketlerini raporlayabilir (Teslim süresi, bekleyen kargolar vb.).<br>3. Ödeme kayıtlarını ve fatura bilgilerini inceleyebilir.                                                                                        |
-
----
-
-# 4. Teknik Mimari ve Yığın (Tech Stack)
-
-## 4.1. Backend
-
-- **NestJS** (TypeScript)
-  - MVC yapısına benzer modüler bir mimari.
-  - REST API veya GraphQL API oluşturmak için uygun.
-- **TypeORM**
-  - Veri tabanı modeli: **PostgreSQL**.
-  - Entity’lerle veritabanı tabloları yönetilir, migration desteğiyle şema değişiklikleri takip edilir.
-- **Yapı**
-  - **Modüller**: AuthModule (kimlik doğrulama), UserModule, ShipmentModule (kargo), CourierModule, PaymentModule vb.
-  - **Controller – Service – Repository** katmanları (NestJS tipik yaklaşım).
-
-## 4.2. Veritabanı (PostgreSQL)
-
-Temel tablo/entiteler (öneri):
-
-1. **User (Kullanıcı)**
-   - id, ad_soyad, telefon, email, sifre, rol (Kurye, SubeSorumlusu, Admin, vb.), tc_no/vergi_no (opsiyonel), created_at, updated_at
-2. **Shipment (Kargo)**
-   - id, tracking_code (barkod/QR için), gonderici_id, alici_adi, alici_adresi, alici_telefon, odeme_tipi, durum (enum: OLUSTURULDU, KURYE_ALDI, SUBEDE, vb.), created_at, updated_at
-3. **Branch (Şube)**
-   - id, sube_adi, adres, created_at, updated_at
-4. **ShipmentHistory (Kargo Durum Geçmişi)**
-   - id, shipment_id, onceki_durum, yeni_durum, tarih, aciklama
-5. **Courier (Kurye)**
-   - id, user_id (bağlantı), plaka, aktif_mi, created_at, updated_at
-
-> Not: Bazı durumlarda `couriers` tablosu yerine `role = 'courier'` olan kullanıcılar tek tablo üzerinden yönetilebilir. Tasarımı proje ihtiyacınıza göre düzenleyebilirsiniz.
-
-## 4.3. Frontend (React + TypeScript)
-
-- **React TypeScript**
-  - Bileşen (component) tabanlı yapı.
-  - State yönetimi için React Context API veya Redux.
-- **Routing**
-  - react-router-dom ile sayfa yönlendirmeleri.
-- **HTTP İletişim**
-  - Axios veya fetch API, NestJS’te oluşturulan endpoint’lerle entegre.
-- **Barkod/QR Okuma**
-  - Kuryenin kamerasını kullanmak için `react-qr-reader`, `react-barcode-reader` gibi kütüphaneler.
-- **UI Kütüphanesi (Opsiyonel)**
-  - Material UI, Ant Design veya Bootstrap gibi bir bileşen kütüphanesiyle hızlı geliştirme.
-
-## 4.4. Geliştirme ve Dağıtım
-
-- **Versiyon Kontrol**
-  - Git (GitHub, GitLab veya Bitbucket).
-- **Sürekli Entegrasyon (CI)**
-  - GitHub Actions veya GitLab CI ile otomatik test, build.
-- **Dağıtım (Deployment)**
-  - Sunucu tarafında Docker kullanarak, Postgres ve NestJS konteynerları ile barındırma.
-  - Frontend’i statik olarak Nginx veya benzeri bir sunucuda barındırma.
-
----
-
-# 5. Fonksiyonel Olmayan Gereksinimler (Non-Functional Requirements)
-
-1. **Performans**
-
-   - Aynı anda en az “X” adet kurye ve “Y” adet gönderici işlem yapabilmelidir.
-   - Durum güncellemeleri anlık görülmelidir (<1-2 sn gecikme).
-
-2. **Güvenlik**
-
-   - JWT tabanlı kimlik doğrulama (NestJS’de `@nestjs/jwt`).
-   - T.C./Vergi numarası gibi kritik bilgilerin veritabanında güvenli şekilde saklanması.
-   - HTTPS zorunlu, parolalar hash’li (BCrypt vb.).
-
-3. **Veri Yedekleme**
-
-   - PostgreSQL günlük/haftalık yedeklemesi.
-   - Mümkünse farklı bir lokasyonda (off-site) replikasyon.
-
-4. **Ölçeklenebilirlik**
-
-   - İleride mikrolara bölünecek şekilde kodu modüler yazmak.
-   - Veritabanı tablo indekslemeleri (kargo sorgulamaları hızlı olsun).
-
-5. **Kullanılabilirlik (UI/UX)**
-   - Kurye uygulamasının sahada kolay kullanımı (mobil uyum, büyük butonlar, hızlı barkod okuma).
-   - Gönderici ve alıcının takip ekranlarının sade ve anlaşılır olması.
-
----
-
-# 6. Kullanıcı Akışı (Örnek Senaryo)
-
-1. **Kargo Oluşturma**
-
-   - Gönderici panelden giriş yapar → “Yeni Kargo” butonuna tıklar → Gönderici/Alıcı bilgilerini ve ödeme tipini girer → Kargo kayıt edilir, `tracking_code` üretilir.
-
-2. **Manuel Kurye Atama (Şube Sorumlusu)**
-
-   - Şube sorumlusu, “Bekleyen Kargolar” listesini görür → Uygun bir kuryeyi seçer → Sistem durumu “Kurye Atandı” olarak günceller.
-
-3. **Kurye Teslim Alma**
-
-   - Kurye, telefonundaki React mobil sayfasına girer → Kamera açılır → Barkodu okutur → “Teslim Aldım”a basar → Durum “Kurye Aldı” olur.
-
-4. **Şubeye Getirme ve Transfer**
-
-   - Kurye şubeye geldiğinde sistemde “Şubeye Teslim Edildi” olarak günceller.
-   - Şube ayrıştırma işleminden sonra “Transfer Ediliyor” durumu → Bir sonraki şubeye veya dağıtım merkezine yönlendirilir.
-
-5. **Son Şubeye Ulaşma ve Tekrar Kurye Atama**
-
-   - Son şubede “Dağıtım Kurye Atandı” olarak güncellenir.
-   - Kurye, barkod okutarak “Dağıtıma Çıktı” durumuna geçer.
-
-6. **Teslim Etme**
-   - Alıcının adresine geldiğinde barkodu tekrar okutur (isteğe bağlı) → “Teslim Edildi” durumuna geçer.
-   - Alıcı da “Teslim Alındı” bilgisini görebilir.
-
-## Sonuç
-
-Bu PRD, **NestJS, TypeORM, PostgreSQL ve React TypeScript** tabanlı bir kargo takip sisteminin temel gereksinimlerini ve mimarisini özetler. Projenin ilerleyen aşamalarında:
-
-1. **Detaylı Teknik Tasarım Dokümanı**: Entity ilişkileri, API endpoint dökümanları, validasyon kuralları.
-2. **Arayüz Prototipleri (UI/UX)**: Wireframe/mokap tasarımları, kullanıcı akış senaryoları.
+2. **User Module** (`/src/user`)
+
+   - Kullanıcı CRUD işlemleri
+   - Rol yönetimi (Admin, Branch Operator, Courier, Customer)
+   - Şifre hash'leme (bcrypt)
+
+3. **Shipment Module** (`/src/shipment`)
+
+   - Kargo CRUD işlemleri
+   - Durum takibi ve güncellemeleri
+   - Şubeler arası transfer sistemi
+   - Kurye atama mekanizması
+   - Otomatik takip kodu üretimi (nanoid)
+
+4. **Branch Module** (`/src/branch`)
+
+   - Şube CRUD işlemleri
+   - Şube bazlı operasyonlar
+   - Konum yönetimi (point type)
+
+5. **Courier Module** (`/src/courier`)
+
+   - Kurye CRUD işlemleri
+   - Kurye atama/çıkarma
+   - Aktif/pasif durum yönetimi
+   - Şube bazlı kurye listeleme
+
+6. **Reports Module** (`/src/reports`)
+   - Kargo istatistikleri
+   - Kurye performans raporları
+   - Şube performans raporları
+   - Tarih bazlı filtreleme
+
+## Backend API Endpoints
+
+### Auth Endpoints
+
+```
+POST   /auth/register    # Yeni kullanıcı kaydı
+POST   /auth/login      # Kullanıcı girişi ve JWT token üretimi
+```
+
+### User Endpoints
+
+```
+GET    /users           # Kullanıcı listesi (paginated)
+GET    /users/profile   # Giriş yapmış kullanıcı bilgileri
+GET    /users/:id       # Kullanıcı detayı
+PATCH  /users/:id       # Kullanıcı güncelleme
+DELETE /users/:id       # Kullanıcı silme
+```
+
+### Shipment Endpoints
+
+```
+POST   /shipments                              # Yeni kargo oluştur
+GET    /shipments                             # Kargo listesi (paginated)
+GET    /shipments/:id                         # Kargo detayı
+GET    /shipments/track/:trackingCode         # Kargo takibi
+PATCH  /shipments/:id                         # Kargo güncelle
+PATCH  /shipments/:id/assign-courier/:courierId # Kurye ata
+PATCH  /shipments/:id/transfer                # Şube transfer
+```
+
+### Branch Endpoints
+
+```
+POST   /branches        # Yeni şube oluştur
+GET    /branches        # Şube listesi (paginated)
+GET    /branches/:id    # Şube detayı
+PATCH  /branches/:id    # Şube güncelle
+DELETE /branches/:id    # Şube sil
+```
+
+### Courier Endpoints
+
+```
+POST   /couriers        # Yeni kurye oluştur
+GET    /couriers        # Kurye listesi (paginated)
+GET    /couriers/available # Müsait kuryeler
+GET    /couriers/:id    # Kurye detayı
+PATCH  /couriers/:id    # Kurye güncelle
+DELETE /couriers/:id    # Kurye sil
+```
+
+### Reports Endpoints
+
+```
+GET    /reports/shipments?startDate=X&endDate=Y  # Kargo istatistikleri
+GET    /reports/couriers?startDate=X&endDate=Y   # Kurye performansı
+GET    /reports/branches?startDate=X&endDate=Y   # Şube performansı
+```
+
+## Veri Modelleri
+
+### User Entity
+
+```typescript
+{
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  identificationNumber: string;
+  password: string;
+  role: UserRole;
+  branchId: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Shipment Entity
+
+```typescript
+{
+  id: string;
+  trackingCode: string;
+  sender: User;
+  recipientName: string;
+  recipientPhone: string;
+  recipientAddress: string;
+  status: ShipmentStatus;
+  paymentType: PaymentType;
+  amount: number;
+  currentBranch: Branch;
+  assignedCourier: User;
+  dimensions: {
+    weight: number;
+    width: number;
+    height: number;
+    length: number;
+  };
+  history: ShipmentHistory[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Branch Entity
+
+```typescript
+{
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  location: Point;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### ShipmentHistory Entity
+
+```typescript
+{
+  id: string;
+  shipment: Shipment;
+  status: ShipmentStatus;
+  description: string;
+  updatedBy: User;
+  createdAt: Date;
+}
+```
+
+## Enums
+
+### UserRole
+
+```typescript
+enum UserRole {
+  ADMIN = "admin",
+  BRANCH_OPERATOR = "branch_operator",
+  COURIER = "courier",
+  CUSTOMER = "customer",
+}
+```
+
+### ShipmentStatus
+
+```typescript
+enum ShipmentStatus {
+  CREATED = "created",
+  COURIER_ASSIGNED = "courier_assigned",
+  PICKED_UP = "picked_up",
+  IN_BRANCH = "in_branch",
+  IN_TRANSIT = "in_transit",
+  OUT_FOR_DELIVERY = "out_for_delivery",
+  DELIVERED = "delivered",
+  FAILED = "failed",
+}
+```
+
+### PaymentType
+
+```typescript
+enum PaymentType {
+  CASH = "cash",
+  CREDIT_CARD = "credit_card",
+  BANK_TRANSFER = "bank_transfer",
+}
+```
+
+## Backend Kurulum
+
+1. Gereksinimleri yükleyin:
+
+```bash
+npm install
+```
+
+2. `.env` dosyasını oluşturun:
+
+```env
+# Application
+NODE_ENV=development
+PORT=3000
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=kurye_user
+DB_PASSWORD=kurye_password
+DB_DATABASE=kurye_db
+
+# JWT
+JWT_SECRET=your-super-secret-key-change-this-in-production
+JWT_EXPIRATION=1d
+```
+
+3. Docker ile PostgreSQL başlatın:
+
+```bash
+docker-compose up -d
+```
+
+4. Uygulamayı başlatın:
+
+```bash
+# Development
+npm run start:dev
+
+# Production
+npm run build
+npm run start:prod
+```
+
+## Backend Güvenlik Özellikleri
+
+1. **Kimlik Doğrulama**
+
+   - JWT tabanlı token sistemi
+   - Token expiration yönetimi
+   - Refresh token desteği (planlanan)
+
+2. **Yetkilendirme**
+
+   - Role-based access control (RBAC)
+   - Custom decorators ile rol kontrolü
+   - Guard'lar ile otomatik yetki kontrolü
+
+3. **Veri Güvenliği**
+
+   - Password hashing (bcrypt)
+   - Input validation (class-validator)
+   - SQL injection koruması (TypeORM)
+   - Rate limiting (planlanan)
+
+4. **API Güvenliği**
+   - CORS yapılandırması
+   - Helmet middleware
+   - API key sistemi (planlanan)
+
+## Backend Test Yapısı (Planlanan)
+
+1. **Unit Tests**
+
+   - Service katmanı testleri
+   - Controller katmanı testleri
+   - Guard ve decorator testleri
+
+2. **Integration Tests**
+
+   - API endpoint testleri
+   - Database işlem testleri
+   - Authentication flow testleri
+
+3. **E2E Tests**
+   - Tam iş akışı testleri
+   - Senaryo bazlı testler
+
+# Frontend Yapısı
+
+## Teknoloji Yığını
+
+- **Framework**: React 18
+- **State Yönetimi**: Redux Toolkit
+- **UI Framework**: Material-UI (MUI) v5
+- **Form Yönetimi**: React Hook Form
+- **API İletişimi**: Axios
+- **Grafik Kütüphanesi**: Recharts
+- **Tarih İşlemleri**: Day.js
+- **Validation**: Yup
+
+## Sayfa Yapısı
+
+### 1. Giriş/Yetkilendirme Sayfaları
+
+- **Giriş (/login)**
+  - Kullanıcı girişi formu
+  - Şifremi unuttum linki
+  - Hata mesajları
+
+### 2. Dashboard (/dashboard)
+
+- **Özet Bilgiler**
+  - Toplam kargo sayısı
+  - Günlük teslimat sayısı
+  - Aktif kuryeler
+  - Bekleyen kargolar
+- **Grafik ve İstatistikler**
+  - Günlük/Haftalık/Aylık kargo dağılımı
+  - Şube performans grafiği
+  - Kurye performans grafiği
+
+### 3. Kargo Yönetimi
+
+- **Kargo Listesi (/shipments)**
+  - Filtreleme ve arama
+  - Durum bazlı gruplama
+  - Toplu işlem seçenekleri
+  - Pagination
+- **Kargo Detay (/shipments/:id)**
+  - Kargo bilgileri
+  - Durum güncelleme
+  - Kurye atama
+  - Konum bilgisi
+  - Tarihçe görüntüleme
+- **Yeni Kargo (/shipments/create)**
+  - Gönderici bilgileri
+  - Alıcı bilgileri
+  - Kargo detayları
+  - Ödeme bilgileri
+
+### 4. Kurye Yönetimi
+
+- **Kurye Listesi (/couriers)**
+  - Aktif/Pasif kurye filtresi
+  - Şube bazlı filtreleme
+  - Performans göstergeleri
+- **Kurye Detay (/couriers/:id)**
+  - Kişisel bilgiler
+  - Atanmış kargolar
+  - Performans metrikleri
+  - Durum güncelleme
+
+### 5. Şube Yönetimi
+
+- **Şube Listesi (/branches)**
+  - Bölge bazlı filtreleme
+  - Aktif/Pasif şube görüntüleme
+  - Performans metrikleri
+- **Şube Detay (/branches/:id)**
+  - Şube bilgileri
+  - Personel listesi
+  - Kargo istatistikleri
+  - Konum bilgisi
+
+### 6. Kullanıcı Yönetimi
+
+- **Kullanıcı Listesi (/users)**
+  - Rol bazlı filtreleme
+  - Aktif/Pasif kullanıcı görüntüleme
+  - Toplu işlem seçenekleri
+- **Kullanıcı Detay (/users/:id)**
+  - Kullanıcı bilgileri
+  - Rol yönetimi
+  - Şube ataması
+  - Aktivite geçmişi
+
+### 7. Raporlama
+
+- **Kargo Raporları (/reports/shipments)**
+  - Tarih aralığı seçimi
+  - Durum bazlı dağılım
+  - Excel/PDF export
+- **Kurye Raporları (/reports/couriers)**
+  - Performans metrikleri
+  - Teslimat istatistikleri
+  - Başarı oranları
+- **Şube Raporları (/reports/branches)**
+  - Şube performansları
+  - Karşılaştırmalı analizler
+  - Kapasite kullanımı
+
+## Ortak Özellikler
+
+### 1. Layout
+
+- Responsive tasarım
+- Sol menü (collapsible)
+- Üst bar
+  - Kullanıcı profili
+  - Bildirimler
+  - Hızlı işlemler
+
+### 2. Veri Tabloları
+
+- Sıralama
+- Filtreleme
+- Arama
+- Sayfalama
+- Toplu işlem
+- Excel/PDF export
+
+### 3. Formlar
+
+- Gerçek zamanlı validasyon
+- Otomatik tamamlama
+- Dosya yükleme
+- Tarih/saat seçiciler
+- Adres girişi (harita entegrasyonu)
+
+### 4. Bildirimler
+
+- İşlem sonuç bildirimleri
+- Sistem uyarıları
+- Hata mesajları
+
+## Güvenlik
+
+- Route koruma (PrivateRoute)
+- Rol bazlı erişim kontrolü
+- Token yönetimi
+- Session timeout
+- XSS koruması

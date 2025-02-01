@@ -9,6 +9,11 @@ import { User, UserRole } from '../user/entities/user.entity';
 import { CreateCourierDto } from './dto/create-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
 import * as bcrypt from 'bcrypt';
+import {
+  IPaginationOptions,
+  paginate,
+  Pagination,
+} from 'nestjs-typeorm-paginate';
 
 @Injectable()
 export class CourierService {
@@ -38,11 +43,13 @@ export class CourierService {
     return await this.userRepository.save(courier);
   }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find({
-      where: { role: UserRole.COURIER },
-      relations: ['shipments'],
-    });
+  async findAll(options: IPaginationOptions): Promise<Pagination<User>> {
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.shipments', 'shipments')
+      .where('user.role = :role', { role: UserRole.COURIER });
+
+    return paginate<User>(queryBuilder, options);
   }
 
   async findOne(id: string): Promise<User> {
@@ -83,13 +90,16 @@ export class CourierService {
     }
   }
 
-  async findAvailableCouriers(branchId: string): Promise<User[]> {
-    return await this.userRepository.find({
-      where: {
-        role: UserRole.COURIER,
-        branchId,
-        isActive: true,
-      },
-    });
+  async findAvailableCouriers(
+    branchId: string,
+    options: IPaginationOptions,
+  ): Promise<Pagination<User>> {
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .where('user.role = :role', { role: UserRole.COURIER })
+      .andWhere('user.branchId = :branchId', { branchId })
+      .andWhere('user.isActive = :isActive', { isActive: true });
+
+    return paginate<User>(queryBuilder, options);
   }
 }
