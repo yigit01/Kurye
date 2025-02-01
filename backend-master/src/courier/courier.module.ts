@@ -8,7 +8,7 @@ import { UserModule } from '../user/user.module';
 import { BranchModule } from '../branch/branch.module';
 
 @Module({
-  imports: [UserModule, BranchModule],
+  imports: [TypeOrmModule.forFeature([User, Branch]), UserModule, BranchModule],
   controllers: [CourierController],
   providers: [CourierService],
   exports: [CourierService],

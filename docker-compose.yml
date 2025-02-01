@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: kurye_postgres
+    environment:
+      POSTGRES_USER: kurye_user
+      POSTGRES_PASSWORD: kurye_password
+      POSTGRES_DB: kurye_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kurye_network
+
+  api:
+    build:
+      context: ./backend-master
+      dockerfile: Dockerfile
+    container_name: kurye_api
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=kurye_user
+      - DB_PASSWORD=kurye_password
+      - DB_DATABASE=kurye_db
+      - JWT_SECRET=your-super-secret-key-change-this-in-production
+      - JWT_EXPIRATION=1d
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - kurye_network
+
+volumes:
+  postgres_data:
+
+networks:
+  kurye_network:
+    driver: bridge

@@ -17,8 +17,7 @@ export class ShipmentHistory {
   shipment: Shipment;
 
   @Column({
-    type: 'enum',
-    enum: ShipmentStatus,
+    type: 'varchar',
   })
   status: ShipmentStatus;
 

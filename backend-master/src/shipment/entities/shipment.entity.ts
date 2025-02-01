@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Branch } from '../../branch/entities/branch.entity';
+import { ShipmentHistory } from './shipment-history.entity';
 
 export enum ShipmentStatus {
   CREATED = 'created',
@@ -48,15 +49,13 @@ export class Shipment {
   recipientAddress: string;
 
   @Column({
-    type: 'enum',
-    enum: ShipmentStatus,
+    type: 'varchar',
     default: ShipmentStatus.CREATED,
   })
   status: ShipmentStatus;
 
   @Column({
-    type: 'enum',
-    enum: PaymentType,
+    type: 'varchar',
   })
   paymentType: PaymentType;
 
