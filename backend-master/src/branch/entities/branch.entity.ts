@@ -29,7 +29,7 @@ export class Branch {
   @Column({ default: true })
   isActive: boolean;
 
-  @OneToMany(() => User, (user) => user.branchId)
+  @OneToMany(() => User, (user) => user.branch)
   staff: User[];
 
   @OneToMany(() => Shipment, (shipment) => shipment.currentBranch)

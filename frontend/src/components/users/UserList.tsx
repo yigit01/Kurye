@@ -10,7 +10,7 @@ import {
   IconButton,
   Chip,
 } from "@mui/material";
-import { Visibility } from "@mui/icons-material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 
@@ -62,7 +62,7 @@ const UserList: React.FC = () => {
               </TableCell>
               <TableCell>
                 <IconButton onClick={() => navigate(`/users/${user.id}`)}>
-                  <Visibility />
+                  <VisibilityIcon />
                 </IconButton>
               </TableCell>
             </TableRow>

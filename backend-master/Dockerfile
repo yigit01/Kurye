@@ -1,26 +1,40 @@
-FROM node:18-bullseye
+# Stage 1: Build stage
+FROM node:20-bullseye AS builder
 
 WORKDIR /app
 
+# Önce paket dosyalarını kopyala
 COPY package*.json ./
 
-# Install build dependencies and clean npm cache
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    && rm -rf node_modules \
-    && npm cache clean --force \
-    && npm install --legacy-peer-deps \
-    && npm uninstall bcrypt \
-    && npm install bcrypt \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Build dependencies'ini kur
+RUN apt-get update && \
+    apt-get install -y python3 make g++
 
+# Dependencies'leri kur ve cache'i temizle
+RUN npm install --legacy-peer-deps --include=dev && \
+    npm cache clean --force
+
+# Tüm kaynak kodunu kopyala
 COPY . .
 
+# Production build oluştur
 RUN npm run build
 
+# Stage 2: Production image
+FROM node:20-bullseye-slim
+
+WORKDIR /app
+
+# Sadece production dependencies'leri kopyala
+COPY package*.json ./
+RUN npm install --legacy-peer-deps --omit=dev && \
+    npm cache clean --force
+
+COPY --from=builder /app/dist ./dist
+
+# Port ve çalıştırma komutu
 EXPOSE 4000
 
-CMD ["npm", "run", "start:prod"]
+# Node.js uygulamasını production modunda çalıştır
+ENV NODE_ENV=production
+CMD ["node", "dist/main"]

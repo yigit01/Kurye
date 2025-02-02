@@ -13,10 +13,11 @@ import { generateTrackingCode } from '../utils/tracking-code.generator';
 import { UpdateShipmentDto } from './dto/update-shipment.dto';
 import { TransferShipmentDto } from './dto/transfer-shipment.dto';
 import {
-  IPaginationOptions,
+  FilterOperator,
+  PaginateQuery,
+  Paginated,
   paginate,
-  Pagination,
-} from 'nestjs-typeorm-paginate';
+} from 'nestjs-paginate';
 import { Branch } from '../branch/entities/branch.entity';
 
 @Injectable()
@@ -65,21 +66,35 @@ export class ShipmentService {
   async findAll(
     userId: string,
     role: UserRole,
-    options: IPaginationOptions,
-  ): Promise<Pagination<Shipment>> {
-    const query = this.shipmentRepository
+    query: PaginateQuery,
+  ): Promise<Paginated<Shipment>> {
+    const queryBuilder = this.shipmentRepository
       .createQueryBuilder('shipment')
       .leftJoinAndSelect('shipment.sender', 'sender')
       .leftJoinAndSelect('shipment.currentBranch', 'currentBranch')
       .leftJoinAndSelect('shipment.assignedCourier', 'assignedCourier');
 
     if (role === UserRole.CUSTOMER) {
-      query.where('sender.id = :userId', { userId });
+      queryBuilder.where('sender.id = :userId', { userId });
     } else if (role === UserRole.COURIER) {
-      query.where('assignedCourier.id = :userId', { userId });
+      queryBuilder.where('assignedCourier.id = :userId', { userId });
     }
 
-    return paginate<Shipment>(query, options);
+    return paginate(query, queryBuilder, {
+      sortableColumns: ['createdAt', 'status', 'trackingCode'],
+      searchableColumns: [
+        'trackingCode',
+        'recipientName',
+        'recipientPhone',
+        'recipientAddress',
+      ],
+      defaultSortBy: [['createdAt', 'DESC']],
+      filterableColumns: {
+        status: [FilterOperator.EQ],
+        currentBranchId: [FilterOperator.EQ],
+        assignedCourierId: [FilterOperator.EQ],
+      },
+    });
   }
 
   async findOne(id: string): Promise<Shipment> {

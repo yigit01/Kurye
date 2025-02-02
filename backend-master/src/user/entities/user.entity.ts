@@ -5,9 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Shipment } from '../../shipment/entities/shipment.entity';
+import { Branch } from '../../branch/entities/branch.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -44,14 +46,17 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ nullable: true })
-  branchId: string;
+  @ManyToOne(() => Branch, (branch) => branch.staff)
+  branch: Branch;
 
   @Column({ default: true })
   isActive: boolean;
 
   @OneToMany(() => Shipment, (shipment) => shipment.sender)
   shipments: Shipment[];
+
+  @OneToMany(() => Shipment, (shipment) => shipment.assignedCourier)
+  assignedShipments: Shipment[];
 
   @CreateDateColumn()
   createdAt: Date;

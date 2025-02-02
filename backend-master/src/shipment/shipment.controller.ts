@@ -8,8 +8,6 @@ import {
   UseGuards,
   ValidationPipe,
   Query,
-  DefaultValuePipe,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ShipmentService } from './shipment.service';
 import { CreateShipmentDto } from './dto/create-shipment.dto';
@@ -20,7 +18,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { User, UserRole } from '../user/entities/user.entity';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { GetUser } from 'src/auth/decorators/get-user.decorator';
-import { Pagination } from 'nestjs-typeorm-paginate';
+import { PaginateQuery, Paginated } from 'nestjs-paginate';
 import { Shipment } from './entities/shipment.entity';
 
 @Controller('shipments')
@@ -41,14 +39,9 @@ export class ShipmentController {
   @Get()
   findAll(
     @GetUser() user: User,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
-  ): Promise<Pagination<Shipment>> {
-    return this.shipmentService.findAll(user.id, user.role, {
-      page,
-      limit,
-      route: '/shipments',
-    });
+    @Query() query: PaginateQuery,
+  ): Promise<Paginated<Shipment>> {
+    return this.shipmentService.findAll(user.id, user.role, query);
   }
 
   @Get(':id')

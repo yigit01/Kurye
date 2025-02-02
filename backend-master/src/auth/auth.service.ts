@@ -6,7 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import { User, UserRole } from '../user/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -30,9 +30,8 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Hash password using argon2
+    const hashedPassword = await argon2.hash(password);
 
     // Create user
     const user = this.userRepository.create({
@@ -54,7 +53,7 @@ export class AuthService {
     const { email, password } = loginDto;
     const user = await this.userRepository.findOne({ where: { email } });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user || !(await argon2.verify(user.password, password))) {
       throw new UnauthorizedException('Please check your login credentials');
     }
 
@@ -69,5 +68,9 @@ export class AuthService {
   private generateToken(user: User): string {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return this.jwtService.sign(payload);
+  }
+
+  async getMe(user: User) {
+    return user;
   }
 }

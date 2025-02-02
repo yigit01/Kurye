@@ -7,21 +7,40 @@ import {
   TransferShipmentDto,
 } from "./types";
 import { shipmentsApi } from "../../services/api";
+import { PaymentType, ShipmentStatus } from "../../types/shipment";
+
+interface Shipment {
+  id: string;
+  trackingCode: string;
+  recipientName: string;
+  recipientPhone: string;
+  recipientAddress: string;
+  status: ShipmentStatus;
+  paymentType: PaymentType;
+  amount: number;
+  dimensions?: {
+    weight: number;
+    width: number;
+    height: number;
+    length: number;
+  };
+  currentBranch?: {
+    id: string;
+    name: string;
+  };
+  assignedCourier?: {
+    id: string;
+    fullName: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export const fetchShipments = createAsyncThunk(
   "shipment/fetchShipments",
-  async (
-    params: { page?: number; limit?: number } = {},
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await shipmentsApi.getAll(params);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch shipments"
-      );
-    }
+  async (params?: any) => {
+    const response = await shipmentsApi.getAll(params);
+    return response.data;
   }
 );
 
@@ -55,66 +74,50 @@ export const fetchShipmentByTrackingCode = createAsyncThunk(
 
 export const createShipment = createAsyncThunk(
   "shipment/createShipment",
-  async (data: CreateShipmentDto, { rejectWithValue }) => {
-    try {
-      const response = await shipmentsApi.create(data);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to create shipment"
-      );
-    }
+  async (
+    shipmentData: Omit<
+      Shipment,
+      "id" | "trackingCode" | "status" | "createdAt" | "updatedAt"
+    >
+  ) => {
+    const response = await shipmentsApi.create(shipmentData);
+    return response.data;
   }
 );
 
 export const updateShipment = createAsyncThunk(
   "shipment/updateShipment",
-  async (
-    { id, data }: { id: string; data: UpdateShipmentDto },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await shipmentsApi.update(id, data);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update shipment"
-      );
-    }
+  async ({ id, data }: { id: string; data: Partial<Shipment> }) => {
+    const response = await shipmentsApi.update(id, data);
+    return response.data;
   }
 );
 
 export const assignCourier = createAsyncThunk(
   "shipment/assignCourier",
-  async (
-    { id, courierId }: { id: string; courierId: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await shipmentsApi.assignCourier(id, courierId);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to assign courier"
-      );
-    }
+  async ({
+    shipmentId,
+    courierId,
+  }: {
+    shipmentId: string;
+    courierId: string;
+  }) => {
+    const response = await shipmentsApi.assignCourier(shipmentId, courierId);
+    return response.data;
   }
 );
 
 export const transferShipment = createAsyncThunk(
   "shipment/transferShipment",
-  async (
-    { id, data }: { id: string; data: TransferShipmentDto },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await shipmentsApi.transfer(id, data);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to transfer shipment"
-      );
-    }
+  async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: { targetBranchId: string; transferNote?: string };
+  }) => {
+    const response = await shipmentsApi.transfer(id, data);
+    return response.data;
   }
 );
 
@@ -147,17 +150,12 @@ const shipmentSlice = createSlice({
       })
       .addCase(fetchShipments.fulfilled, (state, action) => {
         state.loading = false;
-        state.shipments = action.payload.items;
-        state.pagination = {
-          page: action.payload.meta.currentPage,
-          limit: action.payload.meta.itemsPerPage,
-          total: action.payload.meta.totalItems,
-        };
-        state.error = null;
+        state.shipments = action.payload;
       })
       .addCase(fetchShipments.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kargolar yüklenirken bir hata oluştu";
       })
       // Fetch Shipment by ID
       .addCase(fetchShipmentById.pending, (state) => {
@@ -194,12 +192,12 @@ const shipmentSlice = createSlice({
       })
       .addCase(createShipment.fulfilled, (state, action) => {
         state.loading = false;
-        state.shipments.unshift(action.payload);
-        state.error = null;
+        state.shipments.push(action.payload);
       })
       .addCase(createShipment.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kargo oluşturulurken bir hata oluştu";
       })
       // Update Shipment
       .addCase(updateShipment.pending, (state) => {
@@ -209,7 +207,7 @@ const shipmentSlice = createSlice({
       .addCase(updateShipment.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.shipments.findIndex(
-          (s) => s.id === action.payload.id
+          (shipment) => shipment.id === action.payload.id
         );
         if (index !== -1) {
           state.shipments[index] = action.payload;
@@ -217,11 +215,11 @@ const shipmentSlice = createSlice({
         if (state.shipment?.id === action.payload.id) {
           state.shipment = action.payload;
         }
-        state.error = null;
       })
       .addCase(updateShipment.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kargo güncellenirken bir hata oluştu";
       })
       // Assign Courier
       .addCase(assignCourier.pending, (state) => {
@@ -231,7 +229,7 @@ const shipmentSlice = createSlice({
       .addCase(assignCourier.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.shipments.findIndex(
-          (s) => s.id === action.payload.id
+          (shipment) => shipment.id === action.payload.id
         );
         if (index !== -1) {
           state.shipments[index] = action.payload;
@@ -239,11 +237,10 @@ const shipmentSlice = createSlice({
         if (state.shipment?.id === action.payload.id) {
           state.shipment = action.payload;
         }
-        state.error = null;
       })
       .addCase(assignCourier.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error = action.error.message || "Kurye atanırken bir hata oluştu";
       })
       // Transfer Shipment
       .addCase(transferShipment.pending, (state) => {
@@ -253,7 +250,7 @@ const shipmentSlice = createSlice({
       .addCase(transferShipment.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.shipments.findIndex(
-          (s) => s.id === action.payload.id
+          (shipment) => shipment.id === action.payload.id
         );
         if (index !== -1) {
           state.shipments[index] = action.payload;
@@ -261,11 +258,11 @@ const shipmentSlice = createSlice({
         if (state.shipment?.id === action.payload.id) {
           state.shipment = action.payload;
         }
-        state.error = null;
       })
       .addCase(transferShipment.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kargo transferi sırasında bir hata oluştu";
       });
   },
 });

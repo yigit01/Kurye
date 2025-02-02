@@ -8,12 +8,13 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from '../user/entities/user.entity';
 import { CreateCourierDto } from './dto/create-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 import {
-  IPaginationOptions,
+  FilterOperator,
+  PaginateQuery,
+  Paginated,
   paginate,
-  Pagination,
-} from 'nestjs-typeorm-paginate';
+} from 'nestjs-paginate';
 
 @Injectable()
 export class CourierService {
@@ -31,8 +32,7 @@ export class CourierService {
       throw new ConflictException('Email already exists');
     }
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createCourierDto.password, salt);
+    const hashedPassword = await argon2.hash(createCourierDto.password);
 
     const courier = this.userRepository.create({
       ...createCourierDto,
@@ -43,13 +43,21 @@ export class CourierService {
     return await this.userRepository.save(courier);
   }
 
-  async findAll(options: IPaginationOptions): Promise<Pagination<User>> {
+  async findAll(query: PaginateQuery): Promise<Paginated<User>> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.shipments', 'shipments')
       .where('user.role = :role', { role: UserRole.COURIER });
 
-    return paginate<User>(queryBuilder, options);
+    return paginate(query, queryBuilder, {
+      sortableColumns: ['createdAt', 'fullName', 'email'],
+      searchableColumns: ['fullName', 'email', 'phone'],
+      defaultSortBy: [['createdAt', 'DESC']],
+      filterableColumns: {
+        isActive: [FilterOperator.EQ],
+        branchId: [FilterOperator.EQ],
+      },
+    });
   }
 
   async findOne(id: string): Promise<User> {
@@ -69,11 +77,7 @@ export class CourierService {
     const courier = await this.findOne(id);
 
     if (updateCourierDto.password) {
-      const salt = await bcrypt.genSalt();
-      updateCourierDto.password = await bcrypt.hash(
-        updateCourierDto.password,
-        salt,
-      );
+      updateCourierDto.password = await argon2.hash(updateCourierDto.password);
     }
 
     Object.assign(courier, updateCourierDto);
@@ -92,14 +96,21 @@ export class CourierService {
 
   async findAvailableCouriers(
     branchId: string,
-    options: IPaginationOptions,
-  ): Promise<Pagination<User>> {
+    query: PaginateQuery,
+  ): Promise<Paginated<User>> {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .where('user.role = :role', { role: UserRole.COURIER })
       .andWhere('user.branchId = :branchId', { branchId })
       .andWhere('user.isActive = :isActive', { isActive: true });
 
-    return paginate<User>(queryBuilder, options);
+    return paginate(query, queryBuilder, {
+      sortableColumns: ['createdAt', 'fullName'],
+      searchableColumns: ['fullName', 'email', 'phone'],
+      defaultSortBy: [['createdAt', 'DESC']],
+      filterableColumns: {
+        isActive: [FilterOperator.EQ],
+      },
+    });
   }
 }

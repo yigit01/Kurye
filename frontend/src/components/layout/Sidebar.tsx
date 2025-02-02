@@ -1,108 +1,161 @@
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import {
   Drawer,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  ListItemButton,
   Divider,
   Box,
+  Toolbar,
+  Typography,
+  alpha,
+  Tooltip,
 } from "@mui/material";
-import {
-  Dashboard,
-  LocalShipping,
-  People,
-  Business,
-  Assessment,
-} from "@mui/icons-material";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import LocalShippingIcon from "@mui/icons-material/LocalShipping";
+import GroupIcon from "@mui/icons-material/Group";
+import BusinessIcon from "@mui/icons-material/Business";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import PeopleIcon from "@mui/icons-material/People";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 interface SidebarProps {
-  drawerWidth: number;
-  mobileOpen: boolean;
-  handleDrawerToggle: () => void;
+  open: boolean;
 }
 
-const menuItems = [
-  { text: "Dashboard", icon: <Dashboard />, path: "/" },
-  { text: "Kargolar", icon: <LocalShipping />, path: "/shipments" },
-  { text: "Kuryeler", icon: <People />, path: "/couriers" },
-  { text: "Şubeler", icon: <Business />, path: "/branches" },
-  { text: "Kullanıcılar", icon: <People />, path: "/users" },
-  { text: "Raporlar", icon: <Assessment />, path: "/reports" },
-];
+const DRAWER_WIDTH = 240;
+const COLLAPSED_DRAWER_WIDTH = 65;
 
-const Sidebar: React.FC<SidebarProps> = ({
-  drawerWidth,
-  mobileOpen,
-  handleDrawerToggle,
-}) => {
+const Sidebar: React.FC<SidebarProps> = ({ open }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  const drawer = (
-    <Box>
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => {
-                navigate(item.path);
-                if (mobileOpen) {
-                  handleDrawerToggle();
-                }
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <Divider />
-    </Box>
-  );
+  const menuItems = [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
+    { text: "Kargolar", icon: <LocalShippingIcon />, path: "/shipments" },
+    { text: "Kuryeler", icon: <GroupIcon />, path: "/couriers" },
+    { text: "Şubeler", icon: <BusinessIcon />, path: "/branches" },
+    { text: "Raporlar", icon: <AssessmentIcon />, path: "/reports" },
+  ];
+
+  // Sadece admin kullanıcılar için kullanıcı yönetimi menüsü
+  if (user?.role === "admin") {
+    menuItems.push({
+      text: "Kullanıcılar",
+      icon: <PeopleIcon />,
+      path: "/users",
+    });
+  }
 
   return (
-    <Box
-      component="nav"
-      sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: open ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH,
+        transition: (theme) =>
+          theme.transitions.create("width", {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+        [`& .MuiDrawer-paper`]: {
+          width: open ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH,
+          transition: (theme) =>
+            theme.transitions.create("width", {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+          boxSizing: "border-box",
+          bgcolor: "background.default",
+          overflowX: "hidden",
+        },
+      }}
     >
-      {/* Mobile drawer */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-        }}
+      <Toolbar
         sx={{
-          display: { xs: "block", sm: "none" },
-          "& .MuiDrawer-paper": {
-            boxSizing: "border-box",
-            width: drawerWidth,
-          },
+          px: 2,
+          bgcolor: "primary.main",
+          color: "primary.contrastText",
+          minHeight: 64,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: open ? "flex-start" : "center",
         }}
       >
-        {drawer}
-      </Drawer>
-      {/* Desktop drawer */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": {
-            boxSizing: "border-box",
-            width: drawerWidth,
-          },
-        }}
-        open
-      >
-        {drawer}
-      </Drawer>
-    </Box>
+        {open ? (
+          <Typography variant="h6" noWrap component="div">
+            Kurye Sistemi
+          </Typography>
+        ) : (
+          <Typography variant="h6" sx={{ fontSize: "1.2rem" }}>
+            KS
+          </Typography>
+        )}
+      </Toolbar>
+      <Box sx={{ overflow: "auto" }}>
+        <List sx={{ pt: 1 }}>
+          {menuItems.map((item) => {
+            const isSelected = location.pathname === item.path;
+            return (
+              <Tooltip
+                key={item.text}
+                title={!open ? item.text : ""}
+                placement="right"
+              >
+                <ListItemButton
+                  onClick={() => navigate(item.path)}
+                  selected={isSelected}
+                  sx={{
+                    minHeight: 48,
+                    px: 2.5,
+                    mx: 1,
+                    my: 0.5,
+                    borderRadius: 1,
+                    justifyContent: open ? "initial" : "center",
+                    "&.Mui-selected": {
+                      bgcolor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.1),
+                      "&:hover": {
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.15),
+                      },
+                    },
+                    "&:hover": {
+                      bgcolor: (theme) =>
+                        alpha(theme.palette.primary.main, 0.05),
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 2 : "auto",
+                      justifyContent: "center",
+                      color: isSelected ? "primary.main" : "text.secondary",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  {open && (
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: 14,
+                        fontWeight: isSelected ? 600 : 400,
+                      }}
+                    />
+                  )}
+                </ListItemButton>
+              </Tooltip>
+            );
+          })}
+        </List>
+        <Divider />
+      </Box>
+    </Drawer>
   );
 };
 

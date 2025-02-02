@@ -1,6 +1,6 @@
 import React from "react";
+import AddIcon from "@mui/icons-material/Add";
 import { Box, Typography, Paper, Button } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
 import UserList from "../../components/users/UserList";
 
 const UsersPage: React.FC = () => {

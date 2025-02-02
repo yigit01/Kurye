@@ -1,9 +1,14 @@
 export interface Courier {
   id: string;
   fullName: string;
+  email: string;
   phone: string;
+  branchId: string;
+  identificationNumber: string;
   isActive: boolean;
   region: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CourierState {

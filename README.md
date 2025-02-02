@@ -9,7 +9,7 @@ Bu proje, NestJS, TypeORM, PostgreSQL kullanılarak geliştirilmiş modern bir k
 - **ORM**: TypeORM
 - **Authentication**: JWT (JSON Web Token)
 - **Validation**: class-validator
-- **Pagination**: nestjs-typeorm-paginate
+- **Pagination**: nestjs-paginate
 - **API Documentation**: Swagger/OpenAPI (planlanan)
 - **Testing**: Jest (planlanan)
 

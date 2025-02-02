@@ -10,7 +10,7 @@ import {
   IconButton,
   Chip,
 } from "@mui/material";
-import { Visibility } from "@mui/icons-material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { Shipment } from "../../store/shipment/types";
@@ -52,7 +52,7 @@ const ShipmentList: React.FC = () => {
                 <IconButton
                   onClick={() => navigate(`/shipments/${shipment.id}`)}
                 >
-                  <Visibility />
+                  <VisibilityIcon />
                 </IconButton>
               </TableCell>
             </TableRow>

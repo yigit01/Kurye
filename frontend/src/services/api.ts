@@ -1,18 +1,27 @@
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
+import Cookies from "js-cookie";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api",
+  baseURL: API_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor for adding auth token
+// Request interceptor to add token
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("token");
+  (config: InternalAxiosRequestConfig) => {
+    const token = Cookies.get("token");
+    console.log("Token from Cookies:", token);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("Authorization header:", config.headers.Authorization);
+      console.log("Request URL:", `${config.baseURL || ""}${config.url || ""}`);
+    } else {
+      console.log("No token found in Cookies");
     }
     return config;
   },
@@ -25,8 +34,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log("API Error:", error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
+      Cookies.remove("token");
       window.location.href = "/login";
     }
     return Promise.reject(error);
@@ -77,10 +87,12 @@ export const couriersApi = {
   create: (data: any) => api.post("/couriers", data),
   update: (id: string, data: any) => api.patch(`/couriers/${id}`, data),
   delete: (id: string) => api.delete(`/couriers/${id}`),
+  getAvailable: (branchId: string) =>
+    api.get(`/couriers/available/${branchId}`),
 };
 
 export const branchesApi = {
-  getAll: (params?: any) => api.get("/branches", { params }),
+  getAll: () => api.get("/branches"),
   getById: (id: string) => api.get(`/branches/${id}`),
   create: (data: any) => api.post("/branches", data),
   update: (id: string, data: any) => api.patch(`/branches/${id}`, data),
@@ -88,8 +100,41 @@ export const branchesApi = {
 };
 
 export const dashboardApi = {
-  getStats: () => api.get("/dashboard/stats"),
-  getWeeklyStats: () => api.get("/dashboard/weekly-stats"),
+  getStats: () => {
+    const today = new Date();
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - 7
+    );
+    const endDate = today;
+
+    return Promise.all([
+      api.get(
+        `/reports/shipments?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+      ),
+      api.get(
+        `/reports/couriers?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+      ),
+      api.get(
+        `/reports/branches?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+      ),
+    ]).then(([shipments, couriers, branches]) => ({
+      totalShipments: shipments.data.total,
+      activeShipments: shipments.data.byStatus.inTransit,
+      deliveredShipments: shipments.data.byStatus.delivered,
+      totalRevenue: 0, // Bu veri şu an için mevcut değil
+      weeklyStats: [
+        {
+          date: startDate.toISOString(),
+          shipments: shipments.data.total,
+          revenue: 0, // Bu veri şu an için mevcut değil
+        },
+      ],
+      courierStats: couriers.data,
+      branchStats: branches.data,
+    }));
+  },
 };
 
 export default api;

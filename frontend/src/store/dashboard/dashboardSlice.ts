@@ -1,32 +1,53 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { DashboardState, initialState } from "./types";
 import { dashboardApi } from "../../services/api";
+
+interface CourierStats {
+  courierId: string;
+  courierName: string;
+  deliveredCount: number;
+  failedCount: number;
+  successRate: number;
+}
+
+interface BranchStats {
+  branchId: string;
+  branchName: string;
+  processedCount: number;
+  deliveredCount: number;
+  throughputRate: number;
+}
+
+interface DashboardStats {
+  totalShipments: number;
+  activeShipments: number;
+  deliveredShipments: number;
+  totalRevenue: number;
+  weeklyStats: {
+    date: string;
+    shipments: number;
+    revenue: number;
+  }[];
+  courierStats: CourierStats[];
+  branchStats: BranchStats[];
+}
+
+interface DashboardState {
+  stats: DashboardStats | null;
+  loading: boolean;
+  error: string | null;
+}
+
+const initialState: DashboardState = {
+  stats: null,
+  loading: false,
+  error: null,
+};
 
 export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await dashboardApi.getStats();
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch dashboard stats"
-      );
-    }
-  }
-);
-
-export const fetchWeeklyStats = createAsyncThunk(
-  "dashboard/fetchWeeklyStats",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await dashboardApi.getWeeklyStats();
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch weekly stats"
-      );
-    }
+  async () => {
+    const response = await dashboardApi.getStats();
+    return response;
   }
 );
 
@@ -43,7 +64,6 @@ const dashboardSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Dashboard Stats
       .addCase(fetchDashboardStats.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -55,21 +75,8 @@ const dashboardSlice = createSlice({
       })
       .addCase(fetchDashboardStats.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
-      })
-      // Fetch Weekly Stats
-      .addCase(fetchWeeklyStats.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchWeeklyStats.fulfilled, (state, action) => {
-        state.loading = false;
-        state.weeklyStats = action.payload;
-        state.error = null;
-      })
-      .addCase(fetchWeeklyStats.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "İstatistikler yüklenirken bir hata oluştu";
       });
   },
 });

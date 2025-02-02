@@ -1,18 +1,19 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { CourierState, initialState, Courier } from "./types";
 import { couriersApi } from "../../services/api";
+import { Courier, CourierState } from "./types";
+
+const initialState: CourierState = {
+  couriers: [],
+  courier: null,
+  loading: false,
+  error: null,
+};
 
 export const fetchCouriers = createAsyncThunk(
   "courier/fetchCouriers",
-  async (params: any = {}, { rejectWithValue }) => {
-    try {
-      const response = await couriersApi.getAll(params);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch couriers"
-      );
-    }
+  async () => {
+    const response = await couriersApi.getAll();
+    return response.data;
   }
 );
 
@@ -32,46 +33,35 @@ export const fetchCourierById = createAsyncThunk(
 
 export const createCourier = createAsyncThunk(
   "courier/createCourier",
-  async (data: Partial<Courier>, { rejectWithValue }) => {
-    try {
-      const response = await couriersApi.create(data);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to create courier"
-      );
-    }
+  async (
+    courierData: Omit<Courier, "id" | "createdAt" | "updatedAt" | "isActive">
+  ) => {
+    const response = await couriersApi.create(courierData);
+    return response.data;
   }
 );
 
 export const updateCourier = createAsyncThunk(
   "courier/updateCourier",
-  async (
-    { id, data }: { id: string; data: Partial<Courier> },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await couriersApi.update(id, data);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to update courier"
-      );
-    }
+  async ({ id, data }: { id: string; data: Partial<Courier> }) => {
+    const response = await couriersApi.update(id, data);
+    return response.data;
   }
 );
 
 export const deleteCourier = createAsyncThunk(
   "courier/deleteCourier",
-  async (id: string, { rejectWithValue }) => {
-    try {
-      await couriersApi.delete(id);
-      return id;
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete courier"
-      );
-    }
+  async (id: string) => {
+    await couriersApi.delete(id);
+    return id;
+  }
+);
+
+export const fetchAvailableCouriers = createAsyncThunk(
+  "courier/fetchAvailableCouriers",
+  async (branchId: string) => {
+    const response = await couriersApi.getAvailable(branchId);
+    return response.data;
   }
 );
 
@@ -106,7 +96,8 @@ const courierSlice = createSlice({
       })
       .addCase(fetchCouriers.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kuryeler yüklenirken bir hata oluştu";
       })
       // Fetch Courier by ID
       .addCase(fetchCourierById.pending, (state) => {
@@ -134,7 +125,8 @@ const courierSlice = createSlice({
       })
       .addCase(createCourier.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kurye oluşturulurken bir hata oluştu";
       })
       // Update Courier
       .addCase(updateCourier.pending, (state) => {
@@ -156,7 +148,8 @@ const courierSlice = createSlice({
       })
       .addCase(updateCourier.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kurye güncellenirken bir hata oluştu";
       })
       // Delete Courier
       .addCase(deleteCourier.pending, (state) => {
@@ -173,7 +166,22 @@ const courierSlice = createSlice({
       })
       .addCase(deleteCourier.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.error =
+          action.error.message || "Kurye silinirken bir hata oluştu";
+      })
+      // Fetch available couriers
+      .addCase(fetchAvailableCouriers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAvailableCouriers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.couriers = action.payload;
+      })
+      .addCase(fetchAvailableCouriers.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.error.message || "Müsait kuryeler yüklenirken bir hata oluştu";
       });
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   AppBar,
   Toolbar,
@@ -6,107 +6,147 @@ import {
   Typography,
   Menu,
   MenuItem,
-  Badge,
   Box,
+  Avatar,
+  Tooltip,
+  Divider,
 } from "@mui/material";
-import {
-  Menu as MenuIcon,
-  Notifications,
-  AccountCircle,
-} from "@mui/icons-material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store";
+import { logout } from "../../store/auth/authSlice";
+import { useNavigate } from "react-router-dom";
+import LogoutIcon from "@mui/icons-material/Logout";
+import PersonIcon from "@mui/icons-material/Person";
 
 interface HeaderProps {
-  drawerWidth: number;
-  handleDrawerToggle: () => void;
+  open: boolean;
+  toggleDrawer: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ drawerWidth, handleDrawerToggle }) => {
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationsAnchorEl, setNotificationsAnchorEl] =
-    useState<null | HTMLElement>(null);
+const DRAWER_WIDTH = 240;
+const COLLAPSED_DRAWER_WIDTH = 65;
 
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleNotificationsMenuOpen = (
-    event: React.MouseEvent<HTMLElement>
-  ) => {
-    setNotificationsAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
+  const handleClose = () => {
     setAnchorEl(null);
-    setNotificationsAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    handleMenuClose();
-    // TODO: Implement logout logic
+  const handleLogout = async () => {
+    await dispatch(logout());
+    navigate("/login");
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   return (
     <AppBar
       position="fixed"
+      elevation={1}
       sx={{
-        width: { sm: `calc(100% - ${drawerWidth}px)` },
-        ml: { sm: `${drawerWidth}px` },
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        transition: (theme) =>
+          theme.transitions.create(["width", "margin"], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+        bgcolor: "background.paper",
+        color: "text.primary",
+        ...(open && {
+          marginLeft: DRAWER_WIDTH,
+          width: `calc(100% - ${DRAWER_WIDTH}px)`,
+        }),
+        ...(!open && {
+          marginLeft: COLLAPSED_DRAWER_WIDTH,
+          width: `calc(100% - ${COLLAPSED_DRAWER_WIDTH}px)`,
+        }),
       }}
     >
       <Toolbar>
         <IconButton
           color="inherit"
           aria-label="open drawer"
+          onClick={toggleDrawer}
           edge="start"
-          onClick={handleDrawerToggle}
-          sx={{ mr: 2, display: { sm: "none" } }}
+          sx={{ marginRight: 2 }}
         >
           <MenuIcon />
         </IconButton>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Kurye Sistemi
-        </Typography>
-        <Box>
-          <IconButton
-            size="large"
-            color="inherit"
-            onClick={handleNotificationsMenuOpen}
+        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" sx={{ mr: 1 }}>
+            {user?.fullName}
+          </Typography>
+          <Tooltip title="Hesap ayarları">
+            <IconButton onClick={handleMenu} size="small" sx={{ padding: 0.5 }}>
+              <Avatar
+                sx={{
+                  width: 35,
+                  height: 35,
+                  bgcolor: "primary.main",
+                  fontSize: "0.875rem",
+                }}
+              >
+                {user?.fullName ? getInitials(user.fullName) : "U"}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+          <Menu
+            id="menu-appbar"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "right",
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            sx={{
+              "& .MuiPaper-root": {
+                minWidth: 180,
+                boxShadow: (theme) => theme.shadows[3],
+                border: (theme) => `1px solid ${theme.palette.divider}`,
+              },
+            }}
           >
-            <Badge badgeContent={4} color="error">
-              <Notifications />
-            </Badge>
-          </IconButton>
-          <IconButton
-            size="large"
-            edge="end"
-            onClick={handleProfileMenuOpen}
-            color="inherit"
-          >
-            <AccountCircle />
-          </IconButton>
+            <Box sx={{ px: 2, py: 1 }}>
+              <Typography variant="subtitle2" noWrap>
+                {user?.fullName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" noWrap>
+                {user?.email}
+              </Typography>
+            </Box>
+            <Divider />
+            <MenuItem onClick={handleClose} sx={{ gap: 2 }}>
+              <PersonIcon fontSize="small" />
+              <Typography variant="body2">Profil</Typography>
+            </MenuItem>
+            <MenuItem onClick={handleLogout} sx={{ gap: 2 }}>
+              <LogoutIcon fontSize="small" />
+              <Typography variant="body2">Çıkış Yap</Typography>
+            </MenuItem>
+          </Menu>
         </Box>
-
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={handleMenuClose}>Profil</MenuItem>
-          <MenuItem onClick={handleLogout}>Çıkış Yap</MenuItem>
-        </Menu>
-
-        <Menu
-          anchorEl={notificationsAnchorEl}
-          open={Boolean(notificationsAnchorEl)}
-          onClose={handleMenuClose}
-        >
-          <MenuItem onClick={handleMenuClose}>
-            Yeni kargo teslim edildi
-          </MenuItem>
-          <MenuItem onClick={handleMenuClose}>
-            Kurye atama bekleyen kargolar
-          </MenuItem>
-        </Menu>
       </Toolbar>
     </AppBar>
   );

@@ -1,15 +1,24 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AuthState, initialState, LoginCredentials } from "./types";
 import { authApi, LoginResponse } from "../../services/api";
+import Cookies from "js-cookie";
 
 export const login = createAsyncThunk<LoginResponse, LoginCredentials>(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
-      localStorage.setItem("token", response.data.token);
+      console.log("Login response:", response.data);
+      // Store token in an HttpOnly cookie
+      Cookies.set("token", response.data.token, {
+        expires: 1, // 1 day
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+      console.log("Token saved in cookie:", Cookies.get("token"));
       return response.data;
     } catch (error: any) {
+      console.log("Login error:", error.response?.data);
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   }
@@ -34,7 +43,7 @@ export const logout = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
-      localStorage.removeItem("token");
+      Cookies.remove("token");
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Logout failed");
     }

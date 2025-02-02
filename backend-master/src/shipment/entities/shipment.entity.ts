@@ -65,7 +65,7 @@ export class Shipment {
   @ManyToOne(() => Branch, (branch) => branch.shipments)
   currentBranch: Branch;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, (user) => user.assignedShipments, { nullable: true })
   assignedCourier: User;
 
   @Column({ type: 'jsonb', nullable: true })
