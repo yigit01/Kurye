@@ -19,24 +19,24 @@ export class ReportsController {
 
   @Get('shipments')
   getShipmentStats(
-    @Query('startDate', ParseDatePipe) startDate: Date,
-    @Query('endDate', ParseDatePipe) endDate: Date,
+    @Query('startDate', new ParseDatePipe()) startDate: Date,
+    @Query('endDate', new ParseDatePipe()) endDate: Date,
   ) {
     return this.reportsService.getShipmentStats(startDate, endDate);
   }
 
   @Get('couriers')
   getCourierPerformance(
-    @Query('startDate', ParseDatePipe) startDate: Date,
-    @Query('endDate', ParseDatePipe) endDate: Date,
+    @Query('startDate', new ParseDatePipe()) startDate: Date,
+    @Query('endDate', new ParseDatePipe()) endDate: Date,
   ) {
     return this.reportsService.getCourierPerformance(startDate, endDate);
   }
 
   @Get('branches')
   getBranchPerformance(
-    @Query('startDate', ParseDatePipe) startDate: Date,
-    @Query('endDate', ParseDatePipe) endDate: Date,
+    @Query('startDate', new ParseDatePipe()) startDate: Date,
+    @Query('endDate', new ParseDatePipe()) endDate: Date,
   ) {
     return this.reportsService.getBranchPerformance(startDate, endDate);
   }

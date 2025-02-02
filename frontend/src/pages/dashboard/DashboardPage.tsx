@@ -1,13 +1,5 @@
-import React from "react";
-import {
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Grid, Paper, Typography, Box, CircularProgress } from "@mui/material";
 import {
   LocalShipping,
   People,
@@ -24,40 +16,128 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import axios from "axios";
 
-const data = [
-  { name: "Pazartesi", kargolar: 40, teslimEdilen: 24 },
-  { name: "Salı", kargolar: 30, teslimEdilen: 13 },
-  { name: "Çarşamba", kargolar: 20, teslimEdilen: 18 },
-  { name: "Perşembe", kargolar: 27, teslimEdilen: 22 },
-  { name: "Cuma", kargolar: 18, teslimEdilen: 15 },
-  { name: "Cumartesi", kargolar: 23, teslimEdilen: 19 },
-  { name: "Pazar", kargolar: 34, teslimEdilen: 32 },
-];
+interface DashboardStats {
+  totalShipments: number;
+  deliveredShipments: number;
+  activeCouriers: number;
+  totalBranches: number;
+}
+
+interface WeeklyStats {
+  name: string;
+  shipments: number;
+  delivered: number;
+}
 
 const DashboardPage: React.FC = () => {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const today = new Date();
+        const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+        // Fetch shipment stats
+        const [shipmentStats, courierStats, branchStats] = await Promise.all([
+          axios.get(
+            `/api/reports/shipments?startDate=${lastWeek.toISOString()}&endDate=${today.toISOString()}`
+          ),
+          axios.get(
+            `/api/reports/couriers?startDate=${lastWeek.toISOString()}&endDate=${today.toISOString()}`
+          ),
+          axios.get(
+            `/api/reports/branches?startDate=${lastWeek.toISOString()}&endDate=${today.toISOString()}`
+          ),
+        ]);
+
+        // Process stats for dashboard summary
+        const dashboardStats: DashboardStats = {
+          totalShipments: shipmentStats.data.totalShipments || 0,
+          deliveredShipments: shipmentStats.data.deliveredShipments || 0,
+          activeCouriers: courierStats.data.activeCouriers || 0,
+          totalBranches: branchStats.data.totalBranches || 0,
+        };
+
+        setStats(dashboardStats);
+
+        // Process weekly stats
+        const weeklyData = shipmentStats.data.dailyStats || [];
+        const processedWeeklyStats = weeklyData.map((day: any) => ({
+          name: new Date(day.date).toLocaleDateString("tr-TR", {
+            weekday: "short",
+          }),
+          shipments: day.totalShipments,
+          delivered: day.deliveredShipments,
+        }));
+
+        setWeeklyStats(processedWeeklyStats);
+        setError(null);
+      } catch (err) {
+        setError("Veriler yüklenirken bir hata oluştu.");
+        console.error("Dashboard data fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
   const summaryCards = [
     {
       title: "Toplam Kargo",
-      value: "156",
+      value: stats?.totalShipments.toString() || "0",
       icon: <LocalShipping />,
       color: "#1976d2",
     },
     {
       title: "Aktif Kuryeler",
-      value: "12",
+      value: stats?.activeCouriers.toString() || "0",
       icon: <People />,
       color: "#2e7d32",
     },
     {
       title: "Toplam Şube",
-      value: "8",
+      value: stats?.totalBranches.toString() || "0",
       icon: <Business />,
       color: "#ed6c02",
     },
     {
       title: "Teslim Edilen",
-      value: "143",
+      value: stats?.deliveredShipments.toString() || "0",
       icon: <CheckCircle />,
       color: "#9c27b0",
     },
@@ -114,7 +194,7 @@ const DashboardPage: React.FC = () => {
               Haftalık Kargo İstatistikleri
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data}>
+              <LineChart data={weeklyStats}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -122,13 +202,13 @@ const DashboardPage: React.FC = () => {
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey="kargolar"
+                  dataKey="shipments"
                   stroke="#1976d2"
                   name="Toplam Kargo"
                 />
                 <Line
                   type="monotone"
-                  dataKey="teslimEdilen"
+                  dataKey="delivered"
                   stroke="#2e7d32"
                   name="Teslim Edilen"
                 />

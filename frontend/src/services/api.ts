@@ -60,9 +60,15 @@ export const authApi = {
 export const shipmentsApi = {
   getAll: (params?: any) => api.get("/shipments", { params }),
   getById: (id: string) => api.get(`/shipments/${id}`),
+  getByTrackingCode: (trackingCode: string) =>
+    api.get(`/shipments/track/${trackingCode}`),
   create: (data: any) => api.post("/shipments", data),
   update: (id: string, data: any) => api.patch(`/shipments/${id}`, data),
   delete: (id: string) => api.delete(`/shipments/${id}`),
+  assignCourier: (id: string, courierId: string) =>
+    api.patch(`/shipments/${id}/assign-courier/${courierId}`),
+  transfer: (id: string, data: any) =>
+    api.patch(`/shipments/${id}/transfer`, data),
 };
 
 export const couriersApi = {
@@ -79,6 +85,11 @@ export const branchesApi = {
   create: (data: any) => api.post("/branches", data),
   update: (id: string, data: any) => api.patch(`/branches/${id}`, data),
   delete: (id: string) => api.delete(`/branches/${id}`),
+};
+
+export const dashboardApi = {
+  getStats: () => api.get("/dashboard/stats"),
+  getWeeklyStats: () => api.get("/dashboard/weekly-stats"),
 };
 
 export default api;

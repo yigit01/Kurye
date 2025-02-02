@@ -13,10 +13,13 @@ import {
 import { Visibility } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { Shipment } from "../../store/shipment/types";
 
 const ShipmentList: React.FC = () => {
   const navigate = useNavigate();
-  const { items, loading } = useSelector((state: RootState) => state.shipment);
+  const { shipments, loading } = useSelector(
+    (state: RootState) => state.shipment
+  );
 
   if (loading) {
     return <div>Yükleniyor...</div>;
@@ -35,7 +38,7 @@ const ShipmentList: React.FC = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {items.map((shipment) => (
+          {shipments.map((shipment: Shipment) => (
             <TableRow key={shipment.id}>
               <TableCell>{shipment.trackingCode}</TableCell>
               <TableCell>{shipment.recipientName}</TableCell>

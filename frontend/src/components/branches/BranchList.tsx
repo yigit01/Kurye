@@ -13,18 +13,11 @@ import {
 import { Visibility } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-
-interface Branch {
-  id: number;
-  name: string;
-  address: string;
-  phone: string;
-  isActive: boolean;
-}
+import { Branch } from "../../store/branch/types";
 
 const BranchList: React.FC = () => {
   const navigate = useNavigate();
-  const { items, loading } = useSelector((state: RootState) => state.branch);
+  const { branches, loading } = useSelector((state: RootState) => state.branch);
 
   if (loading) {
     return <div>Yükleniyor...</div>;
@@ -43,7 +36,7 @@ const BranchList: React.FC = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {items.map((branch: Branch) => (
+          {branches.map((branch: Branch) => (
             <TableRow key={branch.id}>
               <TableCell>{branch.name}</TableCell>
               <TableCell>{branch.address}</TableCell>

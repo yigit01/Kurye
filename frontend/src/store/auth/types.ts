@@ -6,6 +6,11 @@ export interface User {
   isActive: boolean;
 }
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
 export interface AuthState {
   user: User | null;
   users: User[];
