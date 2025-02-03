@@ -11,16 +11,27 @@ export interface Courier {
   updatedAt: string;
 }
 
+export interface PaginatedCouriers {
+  data: Courier[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
 export interface CourierState {
+  couriers: PaginatedCouriers | null;
   courier: Courier | null;
-  couriers: Courier[];
   loading: boolean;
   error: string | null;
 }
 
 export const initialState: CourierState = {
   courier: null,
-  couriers: [],
+  couriers: null,
   loading: false,
   error: null,
 };

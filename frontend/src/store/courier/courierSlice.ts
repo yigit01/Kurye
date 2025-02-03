@@ -3,7 +3,7 @@ import { couriersApi } from "../../services/api";
 import { Courier, CourierState } from "./types";
 
 const initialState: CourierState = {
-  couriers: [],
+  couriers: null,
   courier: null,
   loading: false,
   error: null,
@@ -120,7 +120,20 @@ const courierSlice = createSlice({
       })
       .addCase(createCourier.fulfilled, (state, action) => {
         state.loading = false;
-        state.couriers.push(action.payload);
+        if (state.couriers?.data) {
+          state.couriers.data.push(action.payload);
+        } else {
+          state.couriers = {
+            data: [action.payload],
+            meta: {
+              totalItems: 1,
+              itemCount: 1,
+              itemsPerPage: 10,
+              totalPages: 1,
+              currentPage: 1,
+            },
+          };
+        }
         state.error = null;
       })
       .addCase(createCourier.rejected, (state, action) => {
@@ -135,11 +148,13 @@ const courierSlice = createSlice({
       })
       .addCase(updateCourier.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.couriers.findIndex(
-          (c) => c.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.couriers[index] = action.payload;
+        if (state.couriers?.data) {
+          const index = state.couriers.data.findIndex(
+            (c) => c.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.couriers.data[index] = action.payload;
+          }
         }
         if (state.courier?.id === action.payload.id) {
           state.courier = action.payload;
@@ -158,7 +173,11 @@ const courierSlice = createSlice({
       })
       .addCase(deleteCourier.fulfilled, (state, action) => {
         state.loading = false;
-        state.couriers = state.couriers.filter((c) => c.id !== action.payload);
+        if (state.couriers?.data) {
+          state.couriers.data = state.couriers.data.filter(
+            (c) => c.id !== action.payload
+          );
+        }
         if (state.courier?.id === action.payload) {
           state.courier = null;
         }

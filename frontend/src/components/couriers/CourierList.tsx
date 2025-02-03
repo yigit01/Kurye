@@ -18,7 +18,7 @@ import { Courier } from "../../store/courier/types";
 const CourierList: React.FC = () => {
   const navigate = useNavigate();
   const { couriers, loading } = useSelector((state: RootState) => ({
-    couriers: state.courier.couriers || [],
+    couriers: state.courier.couriers?.data || [],
     loading: state.courier.loading,
   }));
 

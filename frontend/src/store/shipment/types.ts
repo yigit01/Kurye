@@ -61,26 +61,30 @@ export interface TransferShipmentDto {
   targetBranchId: string;
 }
 
+export interface PaginatedShipments {
+  data: Shipment[];
+  meta: {
+    itemsPerPage: number;
+    totalItems: number;
+    currentPage: number;
+    totalPages: number;
+    sortBy: [string, string][];
+  };
+  links: {
+    current: string;
+  };
+}
+
 export interface ShipmentState {
   shipment: Shipment | null;
-  shipments: Shipment[];
+  shipments: PaginatedShipments | null;
   loading: boolean;
   error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
 }
 
 export const initialState: ShipmentState = {
   shipment: null,
-  shipments: [],
+  shipments: null,
   loading: false,
   error: null,
-  pagination: {
-    page: 1,
-    limit: 10,
-    total: 0,
-  },
 };

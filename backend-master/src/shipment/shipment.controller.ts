@@ -28,7 +28,7 @@ export class ShipmentController {
 
   @Post()
   @UseGuards(RolesGuard)
-  @Roles(UserRole.CUSTOMER)
+  @Roles(UserRole.ADMIN, UserRole.BRANCH_OPERATOR)
   create(
     @Body(ValidationPipe) createShipmentDto: CreateShipmentDto,
     @GetUser() user: User,

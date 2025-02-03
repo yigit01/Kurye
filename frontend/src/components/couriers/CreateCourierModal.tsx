@@ -8,49 +8,103 @@ import {
   Button,
   Box,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
+  FormHelperText,
 } from "@mui/material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createCourier } from "../../store/courier/courierSlice";
+import { fetchBranches } from "../../store/slices/branchSlice";
+import { RootState } from "../../store";
 
 interface CreateCourierModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  branchId?: string;
 }
 
 const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
   open,
   onClose,
   onSuccess,
-  branchId,
 }) => {
   const dispatch = useDispatch();
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    password: "",
     phone: "",
     identificationNumber: "",
-    region: "",
-    branchId: branchId || "",
+    branchId: "",
+    region: "TR",
   });
+
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const branches = useSelector((state: RootState) => state.branch.branches);
 
   useEffect(() => {
     if (open) {
+      dispatch(fetchBranches() as any);
       setError(null);
-      setFormData((prev) => ({
-        ...prev,
-        branchId: branchId || "",
-      }));
+      setPasswordError(null);
+      setFormData({
+        fullName: "",
+        email: "",
+        password: "",
+        phone: "",
+        identificationNumber: "",
+        branchId: "",
+        region: "TR",
+      });
     }
-  }, [open, branchId]);
+  }, [open, dispatch]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const validatePassword = (password: string): boolean => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumberOrSpecial = /[\d\W]/.test(password);
+    const isLongEnough = password.length >= 6;
+
+    if (!isLongEnough) {
+      setPasswordError("Şifre en az 6 karakter uzunluğunda olmalıdır");
+      return false;
+    }
+
+    if (!(hasUpperCase && hasLowerCase && hasNumberOrSpecial)) {
+      setPasswordError(
+        "Şifre en az 1 büyük harf, 1 küçük harf ve 1 rakam veya özel karakter içermelidir"
+      );
+      return false;
+    }
+
+    setPasswordError(null);
+    return true;
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name as string]: value,
+    }));
+
+    if (name === "password") {
+      validatePassword(value as string);
+    }
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name as string]: value,
     }));
   };
 
@@ -59,26 +113,55 @@ const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
     setError(null);
 
     if (!formData.branchId) {
-      setError("Lütfen önce bir şube seçin");
+      setError("Lütfen bir şube seçin");
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      return;
+    }
+
+    if (formData.phone.length < 10 || !/^\d+$/.test(formData.phone)) {
+      setError(
+        "Telefon numarası en az 10 haneli olmalı ve sadece rakam içermelidir"
+      );
+      return;
+    }
+
+    if (formData.identificationNumber.length < 10) {
+      setError("TC Kimlik No en az 10 haneli olmalıdır");
       return;
     }
 
     try {
-      const result = await dispatch(createCourier(formData) as any).unwrap();
+      await dispatch(createCourier(formData) as any).unwrap();
       onSuccess?.();
       onClose();
       setFormData({
         fullName: "",
         email: "",
+        password: "",
         phone: "",
         identificationNumber: "",
-        region: "",
-        branchId: branchId || "",
+        branchId: "",
+        region: "TR",
       });
     } catch (error: any) {
       setError(error.message || "Kurye oluşturulurken bir hata oluştu");
       console.error("Kurye oluşturulurken hata:", error);
     }
+  };
+
+  const handleReset = () => {
+    setFormData({
+      fullName: "",
+      email: "",
+      password: "",
+      phone: "",
+      identificationNumber: "",
+      branchId: "",
+      region: "TR",
+    });
   };
 
   return (
@@ -92,6 +175,23 @@ const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
                 {error}
               </Alert>
             )}
+            <FormControl fullWidth required>
+              <InputLabel id="branch-select-label">Şube</InputLabel>
+              <Select
+                labelId="branch-select-label"
+                id="branch-select"
+                name="branchId"
+                value={formData.branchId}
+                label="Şube"
+                onChange={handleSelectChange}
+              >
+                {branches?.map((branch) => (
+                  <MenuItem key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               name="fullName"
               label="Ad Soyad"
@@ -99,6 +199,7 @@ const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
               onChange={handleChange}
               required
               fullWidth
+              inputProps={{ minLength: 2 }}
             />
             <TextField
               name="email"
@@ -110,12 +211,28 @@ const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
               fullWidth
             />
             <TextField
+              name="password"
+              label="Şifre"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              fullWidth
+              error={!!passwordError}
+              helperText={passwordError}
+            />
+            <TextField
               name="phone"
               label="Telefon"
               value={formData.phone}
               onChange={handleChange}
               required
               fullWidth
+              inputProps={{
+                minLength: 10,
+                pattern: "[0-9]*",
+              }}
+              helperText="En az 10 haneli ve sadece rakam"
             />
             <TextField
               name="identificationNumber"
@@ -124,14 +241,8 @@ const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
               onChange={handleChange}
               required
               fullWidth
-            />
-            <TextField
-              name="region"
-              label="Bölge"
-              value={formData.region}
-              onChange={handleChange}
-              required
-              fullWidth
+              inputProps={{ minLength: 10 }}
+              helperText="En az 10 haneli"
             />
           </Box>
         </DialogContent>

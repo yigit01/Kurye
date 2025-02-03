@@ -1,15 +1,8 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { shipmentsApi } from "../../services/api";
+import { Shipment } from "../../types/shipment";
 
-interface Shipment {
-  id: string;
-  trackingCode: string;
-  status: string;
-  recipientName: string;
-  recipientAddress: string;
-  createdAt: string;
-}
-
-interface ShipmentState {
+export interface ShipmentState {
   items: Shipment[];
   loading: boolean;
   error: string | null;
@@ -20,6 +13,27 @@ const initialState: ShipmentState = {
   loading: false,
   error: null,
 };
+
+export const fetchShipments = createAsyncThunk(
+  "shipment/fetchShipments",
+  async () => {
+    const response = await shipmentsApi.getAll();
+    return response.data;
+  }
+);
+
+export const createShipment = createAsyncThunk(
+  "shipment/createShipment",
+  async (
+    shipmentData: Omit<
+      Shipment,
+      "id" | "trackingCode" | "status" | "createdAt" | "updatedAt"
+    >
+  ) => {
+    const response = await shipmentsApi.create(shipmentData);
+    return response.data;
+  }
+);
 
 const shipmentSlice = createSlice({
   name: "shipment",
@@ -34,6 +48,39 @@ const shipmentSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Fetch Shipments
+      .addCase(fetchShipments.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchShipments.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchShipments.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.error.message || "Kargolar yüklenirken bir hata oluştu";
+      })
+      // Create Shipment
+      .addCase(createShipment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createShipment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items.push(action.payload);
+        state.error = null;
+      })
+      .addCase(createShipment.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.error.message || "Kargo oluşturulurken bir hata oluştu";
+      });
   },
 });
 

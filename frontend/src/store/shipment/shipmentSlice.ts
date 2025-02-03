@@ -137,9 +137,6 @@ const shipmentSlice = createSlice({
     setShipments: (state, action) => {
       state.shipments = action.payload;
     },
-    setPagination: (state, action) => {
-      state.pagination = action.payload;
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -192,7 +189,10 @@ const shipmentSlice = createSlice({
       })
       .addCase(createShipment.fulfilled, (state, action) => {
         state.loading = false;
-        state.shipments.push(action.payload);
+        if (state.shipments?.data) {
+          state.shipments.data.push(action.payload);
+        }
+        state.error = null;
       })
       .addCase(createShipment.rejected, (state, action) => {
         state.loading = false;
@@ -206,11 +206,13 @@ const shipmentSlice = createSlice({
       })
       .addCase(updateShipment.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.shipments.findIndex(
-          (shipment) => shipment.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.shipments[index] = action.payload;
+        if (state.shipments?.data) {
+          const index = state.shipments.data.findIndex(
+            (shipment) => shipment.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.shipments.data[index] = action.payload;
+          }
         }
         if (state.shipment?.id === action.payload.id) {
           state.shipment = action.payload;
@@ -228,11 +230,13 @@ const shipmentSlice = createSlice({
       })
       .addCase(assignCourier.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.shipments.findIndex(
-          (shipment) => shipment.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.shipments[index] = action.payload;
+        if (state.shipments?.data) {
+          const index = state.shipments.data.findIndex(
+            (shipment) => shipment.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.shipments.data[index] = action.payload;
+          }
         }
         if (state.shipment?.id === action.payload.id) {
           state.shipment = action.payload;
@@ -249,11 +253,13 @@ const shipmentSlice = createSlice({
       })
       .addCase(transferShipment.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.shipments.findIndex(
-          (shipment) => shipment.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.shipments[index] = action.payload;
+        if (state.shipments?.data) {
+          const index = state.shipments.data.findIndex(
+            (shipment) => shipment.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.shipments.data[index] = action.payload;
+          }
         }
         if (state.shipment?.id === action.payload.id) {
           state.shipment = action.payload;
@@ -267,11 +273,6 @@ const shipmentSlice = createSlice({
   },
 });
 
-export const {
-  setLoading,
-  setError,
-  setShipment,
-  setShipments,
-  setPagination,
-} = shipmentSlice.actions;
+export const { setLoading, setError, setShipment, setShipments } =
+  shipmentSlice.actions;
 export default shipmentSlice.reducer;

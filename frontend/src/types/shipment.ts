@@ -25,13 +25,18 @@ export interface Dimensions {
 export interface Shipment {
   id: string;
   trackingCode: string;
+  status: string;
   recipientName: string;
   recipientPhone: string;
   recipientAddress: string;
-  status: ShipmentStatus;
   paymentType: PaymentType;
   amount: number;
-  dimensions?: Dimensions;
-  createdAt: Date;
-  updatedAt: Date;
+  dimensions?: {
+    weight: number;
+    width: number;
+    height: number;
+    length: number;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
