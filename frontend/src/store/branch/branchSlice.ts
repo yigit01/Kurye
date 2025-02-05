@@ -4,15 +4,19 @@ import { Branch, BranchState } from "./types";
 
 const initialState: BranchState = {
   branch: null,
-  branches: [],
+  branches: null,
   loading: false,
   error: null,
 };
 
 export const fetchBranches = createAsyncThunk(
   "branch/fetchBranches",
-  async () => {
-    const response = await branchesApi.getAll();
+  async ({ page, limit }: { page: number; limit: number }) => {
+    const response = await branchesApi.getAll({
+      page,
+      limit,
+      sortBy: ["createdAt:DESC"],
+    });
     return response.data;
   }
 );
@@ -70,7 +74,11 @@ const branchSlice = createSlice({
       })
       .addCase(createBranch.fulfilled, (state, action) => {
         state.loading = false;
-        state.branches.push(action.payload);
+        if (state.branches) {
+          state.branches.data.unshift(action.payload);
+          state.branches.meta.totalItems += 1;
+          state.branches.meta.itemCount += 1;
+        }
       })
       .addCase(createBranch.rejected, (state, action) => {
         state.loading = false;
@@ -84,11 +92,13 @@ const branchSlice = createSlice({
       })
       .addCase(updateBranch.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.branches.findIndex(
-          (branch) => branch.id === action.payload.id
-        );
-        if (index !== -1) {
-          state.branches[index] = action.payload;
+        if (state.branches) {
+          const index = state.branches.data.findIndex(
+            (branch) => branch.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.branches.data[index] = action.payload;
+          }
         }
       })
       .addCase(updateBranch.rejected, (state, action) => {
@@ -103,9 +113,13 @@ const branchSlice = createSlice({
       })
       .addCase(deleteBranch.fulfilled, (state, action) => {
         state.loading = false;
-        state.branches = state.branches.filter(
-          (branch) => branch.id !== action.payload
-        );
+        if (state.branches) {
+          state.branches.data = state.branches.data.filter(
+            (branch) => branch.id !== action.payload
+          );
+          state.branches.meta.totalItems -= 1;
+          state.branches.meta.itemCount -= 1;
+        }
       })
       .addCase(deleteBranch.rejected, (state, action) => {
         state.loading = false;

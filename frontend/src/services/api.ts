@@ -68,7 +68,8 @@ export const authApi = {
 };
 
 export const shipmentsApi = {
-  getAll: (params?: any) => api.get("/shipments", { params }),
+  getAll: (params?: { page: number; limit: number; sortBy?: string[] }) =>
+    api.get("/shipments", { params }),
   getById: (id: string) => api.get(`/shipments/${id}`),
   getByTrackingCode: (trackingCode: string) =>
     api.get(`/shipments/track/${trackingCode}`),
@@ -92,7 +93,8 @@ export const couriersApi = {
 };
 
 export const branchesApi = {
-  getAll: () => api.get("/branches"),
+  getAll: (params?: { page: number; limit: number; sortBy?: string[] }) =>
+    api.get("/branches", { params }),
   getById: (id: string) => api.get(`/branches/${id}`),
   create: (data: any) => api.post("/branches", data),
   update: (id: string, data: any) => api.patch(`/branches/${id}`, data),

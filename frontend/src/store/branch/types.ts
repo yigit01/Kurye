@@ -8,6 +8,17 @@ export interface Branch {
   updatedAt: string;
 }
 
+export interface PaginatedBranches {
+  data: Branch[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
 export interface CreateBranchDto {
   name: string;
   address: string;
@@ -22,15 +33,15 @@ export interface UpdateBranchDto {
 }
 
 export interface BranchState {
+  branches: PaginatedBranches | null;
   branch: Branch | null;
-  branches: Branch[];
   loading: boolean;
   error: string | null;
 }
 
 export const initialState: BranchState = {
   branch: null,
-  branches: [],
+  branches: null,
   loading: false,
   error: null,
 };

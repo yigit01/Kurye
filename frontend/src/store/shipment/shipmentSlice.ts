@@ -38,8 +38,12 @@ interface Shipment {
 
 export const fetchShipments = createAsyncThunk(
   "shipment/fetchShipments",
-  async (params?: any) => {
-    const response = await shipmentsApi.getAll(params);
+  async ({ page, limit }: { page: number; limit: number }) => {
+    const response = await shipmentsApi.getAll({
+      page,
+      limit,
+      sortBy: ["createdAt:DESC"],
+    });
     return response.data;
   }
 );

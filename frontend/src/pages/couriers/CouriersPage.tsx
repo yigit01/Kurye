@@ -12,14 +12,14 @@ const CouriersPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    dispatch(fetchCouriers());
+    dispatch(fetchCouriers({ page: 1, limit: 20 }));
   }, [dispatch]);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleSuccess = () => {
-    dispatch(fetchCouriers());
+    dispatch(fetchCouriers({ page: 1, limit: 20 }));
   };
 
   return (

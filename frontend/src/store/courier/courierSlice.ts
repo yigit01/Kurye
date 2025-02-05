@@ -11,8 +11,12 @@ const initialState: CourierState = {
 
 export const fetchCouriers = createAsyncThunk(
   "courier/fetchCouriers",
-  async () => {
-    const response = await couriersApi.getAll();
+  async ({ page, limit }: { page: number; limit: number }) => {
+    const response = await couriersApi.getAll({
+      page,
+      limit,
+      sortBy: ["createdAt:DESC"],
+    });
     return response.data;
   }
 );

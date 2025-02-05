@@ -23,13 +23,15 @@ import { RootState } from "../../store";
 interface CreateCourierModalProps {
   open: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess: () => void;
+  branchId?: string;
 }
 
 const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
   open,
   onClose,
   onSuccess,
+  branchId,
 }) => {
   const dispatch = useDispatch();
   const [error, setError] = useState<string | null>(null);
@@ -185,7 +187,7 @@ const CreateCourierModal: React.FC<CreateCourierModalProps> = ({
                 label="Şube"
                 onChange={handleSelectChange}
               >
-                {branches?.map((branch) => (
+                {branches?.data?.map((branch) => (
                   <MenuItem key={branch.id} value={branch.id}>
                     {branch.name}
                   </MenuItem>

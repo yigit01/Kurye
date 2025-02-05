@@ -1,7 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import courierReducer from "./courier/courierSlice";
-import branchReducer from "./slices/branchSlice";
+import branchReducer from "./branch/branchSlice";
 import shipmentReducer from "./shipment/shipmentSlice";
 import dashboardReducer from "./dashboard/dashboardSlice";
 import { AuthState } from "./auth/types";

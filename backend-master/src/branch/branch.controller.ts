@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { BranchService } from './branch.service';
 import { CreateBranchDto } from './dto/create-branch.dto';
@@ -16,6 +17,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/entities/user.entity';
+import { PaginateQuery, Paginated } from 'nestjs-paginate';
+import { Branch } from './entities/branch.entity';
 
 @Controller('branches')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -30,8 +33,8 @@ export class BranchController {
 
   @Get()
   @Roles(UserRole.ADMIN, UserRole.BRANCH_OPERATOR)
-  findAll() {
-    return this.branchService.findAll();
+  findAll(@Query() query: PaginateQuery): Promise<Paginated<Branch>> {
+    return this.branchService.findAll(query);
   }
 
   @Get(':id')

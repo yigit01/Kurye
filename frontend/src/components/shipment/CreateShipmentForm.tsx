@@ -55,14 +55,14 @@ const CreateShipmentForm: React.FC<CreateShipmentFormProps> = ({
   const selectedBranchId = watch("branchId");
 
   const couriers = useSelector((state: RootState) =>
-    state.courier.couriers.filter(
+    (state.courier.couriers?.data || []).filter(
       (courier) => !selectedBranchId || courier.branchId === selectedBranchId
     )
   );
   const branches = useSelector((state: RootState) => state.branch.branches);
 
   useEffect(() => {
-    dispatch(fetchCouriers() as any);
+    dispatch(fetchCouriers({ page: 1, limit: 100 }) as any);
     dispatch(fetchBranches() as any);
   }, [dispatch]);
 
@@ -72,7 +72,7 @@ const CreateShipmentForm: React.FC<CreateShipmentFormProps> = ({
   }, [selectedBranchId, setValue]);
 
   const handleCreateCourierSuccess = () => {
-    dispatch(fetchCouriers() as any);
+    dispatch(fetchCouriers({ page: 1, limit: 100 }) as any);
   };
 
   const handleCreateBranchSuccess = () => {
@@ -276,7 +276,7 @@ const CreateShipmentForm: React.FC<CreateShipmentFormProps> = ({
               onChange={handleBranchChange}
               label="Şube"
             >
-              {branches?.map((branch) => (
+              {branches?.data?.map((branch) => (
                 <MenuItem key={branch.id} value={branch.id}>
                   {branch.name}
                 </MenuItem>

@@ -28,18 +28,23 @@ export interface ShipmentDimensions {
 export interface Shipment {
   id: string;
   trackingCode: string;
-  sender: User;
   recipientName: string;
   recipientPhone: string;
   recipientAddress: string;
-  status: ShipmentStatus;
-  paymentType: PaymentType;
-  amount: number;
-  currentBranch: Branch;
-  assignedCourier: User | null;
-  dimensions: ShipmentDimensions | null;
+  status: string;
+  paymentType: string;
+  amount: string;
+  dimensions: {
+    width: number;
+    height: number;
+    length: number;
+    weight: number;
+  };
   createdAt: string;
   updatedAt: string;
+  sender: any;
+  currentBranch: any;
+  assignedCourier: any;
 }
 
 export interface CreateShipmentDto {
@@ -64,20 +69,17 @@ export interface TransferShipmentDto {
 export interface PaginatedShipments {
   data: Shipment[];
   meta: {
-    itemsPerPage: number;
     totalItems: number;
-    currentPage: number;
+    itemCount: number;
+    itemsPerPage: number;
     totalPages: number;
-    sortBy: [string, string][];
-  };
-  links: {
-    current: string;
+    currentPage: number;
   };
 }
 
 export interface ShipmentState {
-  shipment: Shipment | null;
   shipments: PaginatedShipments | null;
+  shipment: Shipment | null;
   loading: boolean;
   error: string | null;
 }

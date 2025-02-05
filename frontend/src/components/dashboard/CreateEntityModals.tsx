@@ -26,7 +26,7 @@ const CreateEntityModals: React.FC<CreateEntityModalsProps> = ({
   const branches = useSelector((state: RootState) => state.branch.branches);
 
   useEffect(() => {
-    dispatch(fetchBranches());
+    dispatch(fetchBranches({ page: 1, limit: 100 }));
   }, [dispatch]);
 
   const handleCreateShipment = async (data: any) => {
@@ -115,7 +115,10 @@ const CreateEntityModals: React.FC<CreateEntityModalsProps> = ({
         onClose={() => setIsCourierModalOpen(false)}
         title="Yeni Kurye Oluştur"
       >
-        <CreateCourierForm onSubmit={handleCreateCourier} branches={branches} />
+        <CreateCourierForm
+          onSubmit={handleCreateCourier}
+          branches={branches?.data || []}
+        />
       </Modal>
     </>
   );

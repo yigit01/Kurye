@@ -4,6 +4,12 @@ import { Repository } from 'typeorm';
 import { Branch } from './entities/branch.entity';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
+import {
+  FilterOperator,
+  PaginateQuery,
+  Paginated,
+  paginate,
+} from 'nestjs-paginate';
 
 @Injectable()
 export class BranchService {
@@ -17,9 +23,19 @@ export class BranchService {
     return await this.branchRepository.save(branch);
   }
 
-  async findAll(): Promise<Branch[]> {
-    return await this.branchRepository.find({
-      relations: ['staff', 'shipments'],
+  async findAll(query: PaginateQuery): Promise<Paginated<Branch>> {
+    const queryBuilder = this.branchRepository
+      .createQueryBuilder('branch')
+      .leftJoinAndSelect('branch.staff', 'staff')
+      .leftJoinAndSelect('branch.shipments', 'shipments');
+
+    return paginate(query, queryBuilder, {
+      sortableColumns: ['createdAt', 'name', 'address', 'phone'],
+      searchableColumns: ['name', 'address', 'phone'],
+      defaultSortBy: [['createdAt', 'DESC']],
+      filterableColumns: {
+        isActive: [FilterOperator.EQ],
+      },
     });
   }
 

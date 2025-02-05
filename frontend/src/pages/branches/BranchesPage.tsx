@@ -5,21 +5,21 @@ import BranchList from "../../components/branches/BranchList";
 import CreateBranchModal from "../../components/branches/CreateBranchModal";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store";
-import { fetchBranches } from "../../store/slices/branchSlice";
+import { fetchBranches } from "../../store/branch/branchSlice";
 
 const BranchesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    dispatch(fetchBranches());
+    dispatch(fetchBranches({ page: 1, limit: 20 }));
   }, [dispatch]);
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleSuccess = () => {
-    dispatch(fetchBranches());
+    dispatch(fetchBranches({ page: 1, limit: 20 }));
   };
 
   return (
