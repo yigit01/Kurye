@@ -18,17 +18,33 @@ import { AppService } from './app.service';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: configService.get('DB_PORT'),
-        username: configService.get('DB_USERNAME'),
-        password: configService.get('DB_PASSWORD'),
-        database: configService.get('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-        logging: configService.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const dbUrl = configService.get('DB_URL');
+
+        if (dbUrl) {
+          console.log('DB url connection');
+          return {
+            type: 'postgres',
+            url: dbUrl,
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: true,
+            logging: configService.get('NODE_ENV') === 'development',
+          };
+        }
+
+        console.log('NOT DB url connection');
+        return {
+          type: 'postgres',
+          host: configService.get('DB_HOST'),
+          port: configService.get('DB_PORT'),
+          username: configService.get('DB_USERNAME'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_DATABASE'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: true,
+          logging: configService.get('NODE_ENV') === 'development',
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,

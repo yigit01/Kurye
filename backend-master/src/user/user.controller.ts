@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   ValidationPipe,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,6 +16,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User, UserRole } from './entities/user.entity';
+import { PaginateQuery, Paginated } from 'nestjs-paginate';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -24,8 +26,8 @@ export class UserController {
   @Get()
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  findAll() {
-    return this.userService.findAll();
+  findAll(@Query() query: PaginateQuery): Promise<Paginated<User>> {
+    return this.userService.findAll(query);
   }
 
   @Get('profile')
