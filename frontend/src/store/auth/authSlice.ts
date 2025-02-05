@@ -50,6 +50,14 @@ export const logout = createAsyncThunk(
   }
 );
 
+export const fetchUsers = createAsyncThunk(
+  "auth/fetchUsers",
+  async ({ page, limit }: { page: number; limit: number }) => {
+    const response = await authApi.getUsers({ page, limit });
+    return response.data;
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -101,6 +109,19 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.error = null;
+      })
+      .addCase(fetchUsers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

@@ -6,6 +6,17 @@ export interface User {
   isActive: boolean;
 }
 
+export interface PaginatedUsers {
+  data: User[];
+  meta: {
+    totalItems: number;
+    itemCount: number;
+    itemsPerPage: number;
+    totalPages: number;
+    currentPage: number;
+  };
+}
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -13,14 +24,14 @@ export interface LoginCredentials {
 
 export interface AuthState {
   user: User | null;
-  users: User[];
+  users: PaginatedUsers | null;
   loading: boolean;
   error: string | null;
 }
 
 export const initialState: AuthState = {
   user: null,
-  users: [],
+  users: null,
   loading: false,
   error: null,
 };

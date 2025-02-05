@@ -65,6 +65,9 @@ export const authApi = {
   logout: () => api.post("/auth/logout"),
 
   getCurrentUser: () => api.get("/auth/me"),
+
+  getUsers: (params?: { page: number; limit: number; sortBy?: string[] }) =>
+    api.get("/users", { params }),
 };
 
 export const shipmentsApi = {

@@ -20,14 +20,14 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 
 interface HeaderProps {
-  open: boolean;
-  toggleDrawer: () => void;
+  drawerWidth: number;
+  handleDrawerToggle: () => void;
 }
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_DRAWER_WIDTH = 65;
 
-const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
+const Header: React.FC<HeaderProps> = ({ drawerWidth, handleDrawerToggle }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -67,11 +67,11 @@ const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
           }),
         bgcolor: "background.paper",
         color: "text.primary",
-        ...(open && {
+        ...(drawerWidth === DRAWER_WIDTH && {
           marginLeft: DRAWER_WIDTH,
           width: `calc(100% - ${DRAWER_WIDTH}px)`,
         }),
-        ...(!open && {
+        ...(drawerWidth === COLLAPSED_DRAWER_WIDTH && {
           marginLeft: COLLAPSED_DRAWER_WIDTH,
           width: `calc(100% - ${COLLAPSED_DRAWER_WIDTH}px)`,
         }),
@@ -81,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({ open, toggleDrawer }) => {
         <IconButton
           color="inherit"
           aria-label="open drawer"
-          onClick={toggleDrawer}
+          onClick={handleDrawerToggle}
           edge="start"
           sx={{ marginRight: 2 }}
         >

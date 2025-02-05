@@ -44,9 +44,11 @@ const theme = createTheme({
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [open, setOpen] = React.useState(true);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const toggleDrawer = () => {
     setOpen(!open);
+    setMobileOpen(!mobileOpen);
   };
 
   return (
@@ -59,8 +61,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
       >
         <CssBaseline />
-        <Header open={open} toggleDrawer={toggleDrawer} />
-        <Sidebar open={open} />
+        <Header
+          drawerWidth={open ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH}
+          handleDrawerToggle={toggleDrawer}
+        />
+        <Sidebar
+          drawerWidth={open ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH}
+          mobileOpen={mobileOpen}
+          handleDrawerToggle={toggleDrawer}
+        />
         <Box
           component="main"
           sx={{

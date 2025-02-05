@@ -23,13 +23,19 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 
 interface SidebarProps {
-  open: boolean;
+  drawerWidth: number;
+  mobileOpen: boolean;
+  handleDrawerToggle: () => void;
 }
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_DRAWER_WIDTH = 65;
 
-const Sidebar: React.FC<SidebarProps> = ({ open }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  drawerWidth,
+  mobileOpen,
+  handleDrawerToggle,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -55,14 +61,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
     <Drawer
       variant="permanent"
       sx={{
-        width: open ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH,
+        width: drawerWidth,
         transition: (theme) =>
           theme.transitions.create("width", {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.enteringScreen,
           }),
         [`& .MuiDrawer-paper`]: {
-          width: open ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH,
+          width: drawerWidth,
           transition: (theme) =>
             theme.transitions.create("width", {
               easing: theme.transitions.easing.sharp,
@@ -82,10 +88,11 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
           minHeight: 64,
           display: "flex",
           alignItems: "center",
-          justifyContent: open ? "flex-start" : "center",
+          justifyContent:
+            drawerWidth === DRAWER_WIDTH ? "flex-start" : "center",
         }}
       >
-        {open ? (
+        {drawerWidth === DRAWER_WIDTH ? (
           <Typography variant="h6" noWrap component="div">
             Kurye Sistemi
           </Typography>
@@ -102,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
             return (
               <Tooltip
                 key={item.text}
-                title={!open ? item.text : ""}
+                title={drawerWidth !== DRAWER_WIDTH ? item.text : ""}
                 placement="right"
               >
                 <ListItemButton
@@ -114,7 +121,8 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                     mx: 1,
                     my: 0.5,
                     borderRadius: 1,
-                    justifyContent: open ? "initial" : "center",
+                    justifyContent:
+                      drawerWidth === DRAWER_WIDTH ? "initial" : "center",
                     "&.Mui-selected": {
                       bgcolor: (theme) =>
                         alpha(theme.palette.primary.main, 0.1),
@@ -132,14 +140,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open }) => {
                   <ListItemIcon
                     sx={{
                       minWidth: 0,
-                      mr: open ? 2 : "auto",
+                      mr: drawerWidth === DRAWER_WIDTH ? 2 : "auto",
                       justifyContent: "center",
                       color: isSelected ? "primary.main" : "text.secondary",
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
-                  {open && (
+                  {drawerWidth === DRAWER_WIDTH && (
                     <ListItemText
                       primary={item.text}
                       primaryTypographyProps={{
