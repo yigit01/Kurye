@@ -12,7 +12,11 @@ async function bootstrap() {
 
   // Enable CORS with specific configuration
   app.enableCors({
-    origin: '*',
+    origin: [
+      'http://localhost:3000',
+      'https://kurye.onrender.com',
+      'https://kurye-back.onrender.com',
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
