@@ -11,19 +11,22 @@ import {
   Chip,
   Box,
   TablePagination,
+  CircularProgress,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
 import { AppDispatch } from "../../store";
-import { fetchUsers } from "../../store/auth/authSlice";
+import { fetchUsers } from "../../store/user/userSlice";
 
 interface User {
   id: string;
   fullName: string;
   email: string;
+  phone: string;
   role: string;
   isActive: boolean;
+  createdAt: string;
 }
 
 const UserList: React.FC = () => {
@@ -32,18 +35,10 @@ const UserList: React.FC = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
 
-  const { users, loading } = useSelector((state: RootState) => ({
-    users: state.auth.users || {
-      data: [],
-      meta: {
-        totalItems: 0,
-        itemCount: 0,
-        itemsPerPage: 20,
-        totalPages: 1,
-        currentPage: 1,
-      },
-    },
-    loading: state.auth.loading,
+  const { users, loading, totalItems } = useSelector((state: RootState) => ({
+    users: state.user.users,
+    loading: state.user.loading,
+    totalItems: state.user.totalItems,
   }));
 
   useEffect(() => {
@@ -57,13 +52,46 @@ const UserList: React.FC = () => {
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const newLimit = parseInt(event.target.value, 10);
-    setRowsPerPage(newLimit);
+    setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
+  const handleViewUser = (userId: string) => {
+    navigate(`/users/${userId}`);
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "error";
+      case "courier":
+        return "warning";
+      case "user":
+        return "primary";
+      default:
+        return "default";
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "Admin";
+      case "courier":
+        return "Kurye";
+      case "user":
+        return "Kullanıcı";
+      default:
+        return role;
+    }
+  };
+
   if (loading) {
-    return <div>Yükleniyor...</div>;
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
 
   return (
@@ -73,19 +101,26 @@ const UserList: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Ad Soyad</TableCell>
-              <TableCell>Email</TableCell>
+              <TableCell>E-posta</TableCell>
+              <TableCell>Telefon</TableCell>
               <TableCell>Rol</TableCell>
               <TableCell>Durum</TableCell>
+              <TableCell>Kayıt Tarihi</TableCell>
               <TableCell>İşlemler</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {users.data.map((user: User) => (
+            {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>{user.fullName}</TableCell>
                 <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone}</TableCell>
                 <TableCell>
-                  <Chip label={user.role} size="small" />
+                  <Chip
+                    label={getRoleLabel(user.role)}
+                    color={getRoleColor(user.role) as any}
+                    size="small"
+                  />
                 </TableCell>
                 <TableCell>
                   <Chip
@@ -95,7 +130,13 @@ const UserList: React.FC = () => {
                   />
                 </TableCell>
                 <TableCell>
-                  <IconButton onClick={() => navigate(`/users/${user.id}`)}>
+                  {new Date(user.createdAt).toLocaleDateString("tr-TR")}
+                </TableCell>
+                <TableCell>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleViewUser(user.id)}
+                  >
                     <VisibilityIcon />
                   </IconButton>
                 </TableCell>
@@ -106,25 +147,14 @@ const UserList: React.FC = () => {
       </TableContainer>
       <TablePagination
         component="div"
-        count={users.meta.totalItems}
+        count={totalItems}
         page={page}
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        rowsPerPageOptions={[5, 10, 20, 50]}
-        labelDisplayedRows={({ from, to, count, page }) =>
-          `Sayfa ${page + 1} (${from}-${to} / Toplam ${count} kayıt)`
-        }
+        rowsPerPageOptions={[10, 20, 50]}
+        labelDisplayedRows={({ from, to, count }) => `${from}-${to} / ${count}`}
         labelRowsPerPage="Sayfa başına kayıt"
-        showFirstButton
-        showLastButton
-        getItemAriaLabel={(type) => {
-          if (type === "first") return "İlk sayfaya git";
-          if (type === "last") return "Son sayfaya git";
-          if (type === "next") return "Sonraki sayfa";
-          if (type === "previous") return "Önceki sayfa";
-          return "";
-        }}
       />
     </Box>
   );

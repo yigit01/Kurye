@@ -1,7 +1,8 @@
 import React from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
+import PublicRoute from "../components/auth/PublicRoute";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import ShipmentsPage from "@/pages/shipments/ShipmentsPage";
 import ShipmentDetailPage from "@/pages/shipments/ShipmentDetailPage";
@@ -13,6 +14,8 @@ import UsersPage from "@/pages/users/UsersPage";
 import UserDetailPage from "@/pages/users/UserDetailPage";
 import ReportsPage from "@/pages/reports/ReportsPage";
 import ErrorBoundary from "../components/common/ErrorBoundary";
+import AuthLayout from "../layouts/AuthLayout";
+import NotFoundPage from "../pages/NotFoundPage";
 
 // Error element component
 const ErrorElement = () => (
@@ -23,22 +26,40 @@ const ErrorElement = () => (
 
 const router = createBrowserRouter([
   {
-    path: "/login",
-    element: <LoginPage />,
+    path: "/",
+    element: <AuthLayout />,
     errorElement: <ErrorElement />,
+    children: [
+      {
+        path: "login",
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        ),
+      },
+    ],
   },
   {
     element: <ProtectedRoute />,
     errorElement: <ErrorElement />,
     children: [
       {
-        path: "/",
-        element: <DashboardPage />,
+        index: true,
+        element: (
+          <ErrorBoundary>
+            <DashboardPage />
+          </ErrorBoundary>
+        ),
         errorElement: <ErrorElement />,
       },
       {
-        path: "/dashboard",
-        element: <DashboardPage />,
+        path: "dashboard",
+        element: (
+          <ErrorBoundary>
+            <DashboardPage />
+          </ErrorBoundary>
+        ),
         errorElement: <ErrorElement />,
       },
       // Shipments Routes
@@ -128,6 +149,11 @@ const router = createBrowserRouter([
         errorElement: <ErrorElement />,
       },
     ],
+  },
+  // Not Found route
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 

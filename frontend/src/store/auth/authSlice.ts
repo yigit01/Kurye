@@ -38,17 +38,13 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk(
-  "auth/logout",
-  async (_, { rejectWithValue }) => {
-    try {
-      await authApi.logout();
-      Cookies.remove("token");
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Logout failed");
-    }
-  }
-);
+export const logout = createAsyncThunk("auth/logout", async () => {
+  Cookies.remove("token");
+  localStorage.removeItem("user");
+  sessionStorage.clear();
+  window.location.href = "/login";
+  return null;
+});
 
 export const fetchUsers = createAsyncThunk(
   "auth/fetchUsers",

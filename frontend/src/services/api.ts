@@ -36,8 +36,14 @@ api.interceptors.response.use(
   (error) => {
     console.log("API Error:", error.response?.status, error.response?.data);
     if (error.response?.status === 401) {
+      // Clear all auth data
       Cookies.remove("token");
-      window.location.href = "/login";
+      localStorage.removeItem("user");
+      sessionStorage.clear();
+      // Redirect to login page, but prevent infinite loops
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
@@ -61,8 +67,6 @@ export interface LoginResponse {
 export const authApi = {
   login: (credentials: LoginCredentials) =>
     api.post<LoginResponse>("/auth/login", credentials),
-
-  logout: () => api.post("/auth/logout"),
 
   getCurrentUser: () => api.get("/auth/me"),
 
