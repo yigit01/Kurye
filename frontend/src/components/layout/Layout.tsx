@@ -1,3 +1,4 @@
+//frontend\src\components\layout\Layout.tsx
 import React from "react";
 import { Box, CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import Sidebar from "./Sidebar";

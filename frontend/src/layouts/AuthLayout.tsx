@@ -1,3 +1,4 @@
+//frontend\src\layouts\AuthLayout.tsx
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { Box, Container, Paper } from "@mui/material";

@@ -1,3 +1,4 @@
+//frontend\src\components\shared\LoadingSkeleton.tsx
 import React from "react";
 
 interface LoadingSkeletonProps {

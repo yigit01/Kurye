@@ -1,3 +1,5 @@
+// src/components/layout/Sidebar.tsx
+
 import React from "react";
 import {
   Drawer,
@@ -18,6 +20,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import BusinessIcon from "@mui/icons-material/Business";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import PeopleIcon from "@mui/icons-material/People";
+import SettingsIcon from "@mui/icons-material/Settings"; // Yeni ikon
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
@@ -28,27 +31,22 @@ interface SidebarProps {
   handleDrawerToggle: () => void;
 }
 
-const DRAWER_WIDTH = 240;
-const COLLAPSED_DRAWER_WIDTH = 65;
-
-const Sidebar: React.FC<SidebarProps> = ({
-  drawerWidth,
-  mobileOpen,
-  handleDrawerToggle,
-}) => {
+const Sidebar: React.FC<SidebarProps> = ({ drawerWidth, mobileOpen, handleDrawerToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
 
+  // Menü öğeleri
   const menuItems = [
     { text: "Dashboard", icon: <DashboardIcon />, path: "/" },
     { text: "Kargolar", icon: <LocalShippingIcon />, path: "/shipments" },
     { text: "Kuryeler", icon: <GroupIcon />, path: "/couriers" },
     { text: "Şubeler", icon: <BusinessIcon />, path: "/branches" },
     { text: "Raporlar", icon: <AssessmentIcon />, path: "/reports" },
+    { text: "Kargo Yönetimi", icon: <SettingsIcon />, path: "/cargo-management" }, // Yeni öğe
   ];
 
-  // Sadece admin kullanıcılar için kullanıcı yönetimi menüsü
+  // Eğer admin ise ek menü öğesi
   if (user?.role === "admin") {
     menuItems.push({
       text: "Kullanıcılar",
@@ -88,11 +86,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           minHeight: 64,
           display: "flex",
           alignItems: "center",
-          justifyContent:
-            drawerWidth === DRAWER_WIDTH ? "flex-start" : "center",
+          justifyContent: drawerWidth === 240 ? "flex-start" : "center",
         }}
       >
-        {drawerWidth === DRAWER_WIDTH ? (
+        {drawerWidth === 240 ? (
           <Typography variant="h6" noWrap component="div">
             Kurye Sistemi
           </Typography>
@@ -107,11 +104,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {menuItems.map((item) => {
             const isSelected = location.pathname === item.path;
             return (
-              <Tooltip
-                key={item.text}
-                title={drawerWidth !== DRAWER_WIDTH ? item.text : ""}
-                placement="right"
-              >
+              <Tooltip key={item.text} title={drawerWidth !== 240 ? item.text : ""} placement="right">
                 <ListItemButton
                   onClick={() => navigate(item.path)}
                   selected={isSelected}
@@ -121,33 +114,29 @@ const Sidebar: React.FC<SidebarProps> = ({
                     mx: 1,
                     my: 0.5,
                     borderRadius: 1,
-                    justifyContent:
-                      drawerWidth === DRAWER_WIDTH ? "initial" : "center",
+                    justifyContent: drawerWidth === 240 ? "initial" : "center",
                     "&.Mui-selected": {
-                      bgcolor: (theme) =>
-                        alpha(theme.palette.primary.main, 0.1),
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
                       "&:hover": {
-                        bgcolor: (theme) =>
-                          alpha(theme.palette.primary.main, 0.15),
+                        bgcolor: (theme) => alpha(theme.palette.primary.main, 0.15),
                       },
                     },
                     "&:hover": {
-                      bgcolor: (theme) =>
-                        alpha(theme.palette.primary.main, 0.05),
+                      bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       minWidth: 0,
-                      mr: drawerWidth === DRAWER_WIDTH ? 2 : "auto",
+                      mr: drawerWidth === 240 ? 2 : "auto",
                       justifyContent: "center",
                       color: isSelected ? "primary.main" : "text.secondary",
                     }}
                   >
                     {item.icon}
                   </ListItemIcon>
-                  {drawerWidth === DRAWER_WIDTH && (
+                  {drawerWidth === 240 && (
                     <ListItemText
                       primary={item.text}
                       primaryTypographyProps={{

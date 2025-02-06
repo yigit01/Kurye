@@ -1,3 +1,4 @@
+//frontend\src\components\shipments\ShipmentInfo.tsx
 import React from "react";
 import { Grid, Typography, Divider } from "@mui/material";
 

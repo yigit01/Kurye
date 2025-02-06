@@ -1,3 +1,4 @@
+//frontend\src\components\dashboard\AnimatedDashboardCard.tsx
 import React from "react";
 import { motion } from "framer-motion";
 

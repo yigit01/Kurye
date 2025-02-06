@@ -1,3 +1,4 @@
+//frontend\src\components\dashboard\DashboardCardSkeleton.tsx
 import React from "react";
 import LoadingSkeleton from "../shared/LoadingSkeleton";
 

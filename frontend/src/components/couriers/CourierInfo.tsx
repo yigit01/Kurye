@@ -1,3 +1,4 @@
+//frontend\src\components\couriers\CourierInfo.tsx
 import React from "react";
 import { Grid, Typography, Divider, Chip } from "@mui/material";
 

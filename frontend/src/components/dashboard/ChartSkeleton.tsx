@@ -1,3 +1,4 @@
+//frontend\src\components\dashboard\ChartSkeleton.tsx
 import React from "react";
 import LoadingSkeleton from "../shared/LoadingSkeleton";
 

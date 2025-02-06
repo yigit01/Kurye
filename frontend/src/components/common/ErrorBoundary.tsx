@@ -1,3 +1,4 @@
+//frontend\src\components\common\ErrorBoundary.tsx
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
