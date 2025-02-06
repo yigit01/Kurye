@@ -11,19 +11,19 @@ import {
   TableHead,
   TableRow,
   FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  TablePagination,
   OutlinedInput,
   Checkbox,
   ListItemText,
+  Button,
+  TablePagination,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import AssignmentSelector, { AssignmentOption } from "../../components/cargo-management/AssignmentSelector";
 
-// Shipment tipi: artı "branch" alanı eklendi
+// Shipment tipi – ek olarak hangi şubeye ait olduğu bilgisi de var.
 interface Shipment {
   id: string;
   trackingCode: string;
@@ -82,7 +82,7 @@ const initialHistoryShipments: Shipment[] = [
   },
 ];
 
-// Örnek atama seçenekleri
+// Örnek atama seçenekleri – assignmentOptions tanımını ekliyoruz:
 const courierOptions: AssignmentOption[] = [
   { id: "c1", name: "Kurye 1", type: "Kuryeler" },
   { id: "c2", name: "Kurye 2", type: "Kuryeler" },
@@ -96,25 +96,30 @@ const truckOptions: AssignmentOption[] = [
   { id: "t1", name: "Tır 1", type: "Tırlar" },
   { id: "t2", name: "Tır 2", type: "Tırlar" },
 ];
-const assignmentOptions: AssignmentOption[] = [...courierOptions, ...depotOptions, ...truckOptions];
+const assignmentOptions: AssignmentOption[] = [
+  ...courierOptions,
+  ...depotOptions,
+  ...truckOptions,
+];
 
-// Şube filtrelemesi için kullanılacak örnek şubeler
+// Şube filtrelemesi için örnek şubeler
 const availableBranches = ["Şube A", "Şube B", "Şube C"];
 
 const CargoManagementPage: React.FC = () => {
   const navigate = useNavigate();
 
+  // Pending ve geçmiş kargoların state'leri
   const [pendingShipments, setPendingShipments] = useState<Shipment[]>(initialPendingShipments);
   const [historyShipments, setHistoryShipments] = useState<Shipment[]>(initialHistoryShipments);
 
-  // Geçmiş inline düzenleme state'leri
+  // Geçmiş inline düzenleme için state'ler
   const [editingHistoryId, setEditingHistoryId] = useState<string | null>(null);
   const [editedAssignment, setEditedAssignment] = useState<AssignmentOption | null>(null);
 
   // Şube filtreleme için state
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
 
-  // Filtreleme: seçili şube yoksa tümünü göster, varsa sadece eşleşenleri
+  // Filtreleme: seçili şube yoksa tüm pending/geçmiş kargoları, varsa sadece eşleşenler
   const filteredPending = pendingShipments.filter(
     (s) => selectedBranches.length === 0 || selectedBranches.includes(s.branch)
   );
@@ -155,7 +160,7 @@ const CargoManagementPage: React.FC = () => {
     setEditedAssignment(null);
   };
 
-  // "Atamayı Kaldır": geçmişte atamayı kaldırdığımızda ilgili kargo tamamen silinsin
+  // "Atamayı Kaldır" butonuna basıldığında, ilgili kargo geçmişten tamamen silinsin
   const handleRemoveAssignment = (id: string) => {
     setHistoryShipments((prev) => prev.filter((s) => s.id !== id));
     if (editingHistoryId === id) {
@@ -175,37 +180,39 @@ const CargoManagementPage: React.FC = () => {
 
   // Şube filtresi değişikliği
   const handleBranchFilterChange = (event: any) => {
-    const {
-      target: { value },
-    } = event;
+    const { target: { value } } = event;
     setSelectedBranches(typeof value === "string" ? value.split(",") : value);
     setHistoryPage(0);
   };
 
   return (
     <Box p={3}>
-      <Typography variant="h4" gutterBottom>
-        Kargo Yönetimi
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h4">Kargo Yönetimi</Typography>
+        {/* Üstte de "Geçmişi Gör" butonu ekledik */}
+        <Button variant="outlined" onClick={() => navigate("/cargo-management/history")} startIcon={<span>📜</span>}>
+          Geçmişi Gör
+        </Button>
+      </Box>
 
       {/* Şube Filtreleme */}
       <FormControl sx={{ mb: 2, minWidth: 250 }} size="small">
-              <InputLabel>Şube Seçiniz</InputLabel>
-              <Select
-                multiple
-                value={selectedBranches}
-                onChange={handleBranchFilterChange}
-                input={<OutlinedInput label="Şube Seçiniz" sx={{ backgroundColor: "white" }} />}
-                renderValue={(selected) => (selected as string[]).join(", ")}
-              >
-                {availableBranches.map((branch) => (
-                  <MenuItem key={branch} value={branch}>
-                    <Checkbox checked={selectedBranches.indexOf(branch) > -1} />
-                    <ListItemText primary={branch} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+        <InputLabel>Şube Seçiniz</InputLabel>
+        <Select
+          multiple
+          value={selectedBranches}
+          onChange={handleBranchFilterChange}
+          input={<OutlinedInput label="Şube Seçiniz" sx={{ backgroundColor: "white" }} />}
+          renderValue={(selected) => (selected as string[]).join(", ")}
+        >
+          {availableBranches.map((branch) => (
+            <MenuItem key={branch} value={branch}>
+              <Checkbox checked={selectedBranches.indexOf(branch) > -1} />
+              <ListItemText primary={branch} />
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
       {/* Atama Bekleyen Kargolar Tablosu */}
       <Paper sx={{ p: 2, mb: 4 }}>
@@ -304,7 +311,14 @@ const CargoManagementPage: React.FC = () => {
                           <AssignmentSelector
                             value={editedAssignment}
                             onChange={(newValue) => setEditedAssignment(newValue)}
-                            options={assignmentOptions}
+                            options={[
+                              { id: "c1", name: "Kurye 1", type: "Kuryeler" },
+                              { id: "c2", name: "Kurye 2", type: "Kuryeler" },
+                              { id: "d1", name: "Depo 1", type: "Depolar" },
+                              { id: "d2", name: "Depo 2", type: "Depolar" },
+                              { id: "t1", name: "Tır 1", type: "Tırlar" },
+                              { id: "t2", name: "Tır 2", type: "Tırlar" },
+                            ]}
                             label="Atama"
                           />
                         ) : (
@@ -323,12 +337,7 @@ const CargoManagementPage: React.FC = () => {
                             <Button variant="outlined" size="small" onClick={() => handleEditHistory(shipment)}>
                               Düzenle
                             </Button>{" "}
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              color="error"
-                              onClick={() => handleRemoveAssignment(shipment.id)}
-                            >
+                            <Button variant="outlined" size="small" color="error" onClick={() => handleRemoveAssignment(shipment.id)}>
                               Atamayı Kaldır
                             </Button>
                           </>
