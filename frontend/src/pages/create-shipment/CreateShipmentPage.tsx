@@ -29,6 +29,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  InputAdornment, // Eklenen import
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
@@ -99,20 +100,24 @@ const CreateShipmentPage: React.FC = () => {
   const [dialogTitle, setDialogTitle] = useState("");
   const [dialogMessage, setDialogMessage] = useState("");
   const [deleteShipmentId, setDeleteShipmentId] = useState<string | null>(null);
+  const [manualFeeEnabled, setManualFeeEnabled] = useState(false); // Manuel mod için state
 
   const { width, height, length, fee } = watch();
 
   useEffect(() => {
-    if (width > 0 && height > 0 && length > 0) {
-      const computedDesi = (width * height * length) / 3000;
-      setValue("desi", parseFloat(computedDesi.toFixed(2)));
-      const computedFee = computedDesi * 10;
-      setValue("fee", parseFloat(computedFee.toFixed(2)));
-    } else {
-      setValue("desi", 0);
-      setValue("fee", 0);
+    // Manuel mod aktif değilse otomatik hesaplama yap
+    if (!manualFeeEnabled) {
+      if (width > 0 && height > 0 && length > 0) {
+        const computedDesi = (width * height * length) / 3000;
+        setValue("desi", parseFloat(computedDesi.toFixed(2)));
+        const computedFee = computedDesi * 10;
+        setValue("fee", parseFloat(computedFee.toFixed(2)));
+      } else {
+        setValue("desi", 0);
+        setValue("fee", 0);
+      }
     }
-  }, [width, height, length, setValue]);
+  }, [width, height, length, setValue, manualFeeEnabled]);
 
   const onSubmit = (data: ShipmentFormData) => {
     console.log("Kargo Giriş Verileri:", data);
@@ -304,7 +309,24 @@ const CreateShipmentPage: React.FC = () => {
               <Controller
                 name="fee"
                 control={control}
-                render={({ field }) => <TextField {...field} label="Ücret ₺ (Otomatik)" variant="outlined" fullWidth disabled />}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label={`Ücret ₺ (${manualFeeEnabled ? "Manuel" : "Otomatik"})`}
+                    variant="outlined"
+                    fullWidth
+                    disabled={!manualFeeEnabled}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Button onClick={() => setManualFeeEnabled((prev) => !prev)} size="small">
+                            {manualFeeEnabled ? "Otomatik" : "Manuel"}
+                          </Button>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
               />
             </Grid>
             <Grid item xs={12}>
