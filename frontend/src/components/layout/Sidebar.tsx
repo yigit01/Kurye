@@ -49,13 +49,14 @@ const Sidebar: React.FC<SidebarProps> = ({ drawerWidth, mobileOpen, handleDrawer
     { text: "Raporlar", icon: <AssessmentIcon />, path: "/reports" },
   ];
 
-  // Kargo Yönetimi nested menüsü
+  // Kargo Yönetimi nested menüsü; yeni alt öğe "Yeni Kargo Girişi" eklendi.
   const cargoMenu = {
     text: "Kargo Yönetimi",
     icon: <SettingsIcon />,
     children: [
       { text: "Atama", path: "/cargo-management" },
       { text: "Kargo Geçmişi", path: "/cargo-management/history" },
+      { text: "Yeni Kargo Girişi", path: "/create-shipment" },
     ],
   };
 

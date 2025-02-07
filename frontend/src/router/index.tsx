@@ -18,6 +18,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import NotFoundPage from "../pages/NotFoundPage";
 import CargoManagementPage from "../pages/cargo-management/CargoManagementPage";
 import CargoHistoryPage from "../pages/cargo-management/CargoHistoryPage";
+import CreateShipmentPage from "../pages/create-shipment/CreateShipmentPage";
 
 // Error element component
 const ErrorElement = () => (
@@ -110,6 +111,10 @@ const router = createBrowserRouter([
       {
         path: "/cargo-management/history",
         element: <CargoHistoryPage />,
+      },
+      {
+        path: "/create-shipment", 
+        element: <CreateShipmentPage />,
       },
       // Branches Routes
       {
