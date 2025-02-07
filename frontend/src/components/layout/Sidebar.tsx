@@ -26,6 +26,7 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import SmsIcon from "@mui/icons-material/Sms";
 
 interface SidebarProps {
   drawerWidth: number;
@@ -47,6 +48,9 @@ const Sidebar: React.FC<SidebarProps> = ({ drawerWidth, mobileOpen, handleDrawer
     { text: "Kuryeler", icon: <GroupIcon />, path: "/couriers" },
     { text: "Şubeler", icon: <BusinessIcon />, path: "/branches" },
     { text: "Raporlar", icon: <AssessmentIcon />, path: "/reports" },
+    { text: "SMS İleti", icon: <SmsIcon />, path: "/sms-communication" },
+    { text: "Gelen kargolar", icon: <SmsIcon />, path: "/sms-communication" },
+    { text: "Giden kargolar", icon: <SmsIcon />, path: "/sms-communication" },
   ];
 
   // Kargo Yönetimi nested menüsü; yeni alt öğe "Yeni Kargo Girişi" eklendi.

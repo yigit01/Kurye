@@ -19,7 +19,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import CargoManagementPage from "../pages/cargo-management/CargoManagementPage";
 import CargoHistoryPage from "../pages/cargo-management/CargoHistoryPage";
 import CreateShipmentPage from "../pages/create-shipment/CreateShipmentPage";
-import CreateShipmentHistoryPage from "../pages/create-shipment/ShipmentCreationHistoryPage";
+import SmsCommunicationPage from "../pages/sms/SmsCommunicationPage";
 
 // Error element component
 const ErrorElement = () => (
@@ -110,13 +110,20 @@ const router = createBrowserRouter([
         element: <CargoManagementPage />, 
       },
       {
-        path: "/cargo-management/history",
-        element: <CargoHistoryPage />,
-      },
-      {
         path: "/create-shipment", 
         element: <CreateShipmentPage />,
       },
+      {
+        path: "/cargo-management/history",
+        element: <CargoHistoryPage />,
+      },
+
+      {
+        path: "/sms-communication",
+        element: <SmsCommunicationPage />,
+        errorElement: <ErrorElement />,
+      },
+
       // Branches Routes
       {
         path: "/branches",
