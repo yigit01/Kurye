@@ -117,7 +117,7 @@ const CargoHistoryPage: React.FC = () => {
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate("/cargo-management")}
         >
-          Geri
+          Atama sayfasına dön
         </Button>
       </Box>
 

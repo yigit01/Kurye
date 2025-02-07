@@ -19,6 +19,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import CargoManagementPage from "../pages/cargo-management/CargoManagementPage";
 import CargoHistoryPage from "../pages/cargo-management/CargoHistoryPage";
 import CreateShipmentPage from "../pages/create-shipment/CreateShipmentPage";
+import CreateShipmentHistoryPage from "../pages/create-shipment/ShipmentCreationHistoryPage";
 
 // Error element component
 const ErrorElement = () => (
